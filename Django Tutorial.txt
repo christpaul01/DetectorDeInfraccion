@@ -134,4 +134,7 @@ python3 manage.py sqlmigrate camaras 0001
 python3 manage.py makemigrations model_name #(model_name = camaras)
 python3 manage.py migrate 
 
+14) Run the project
+
+py manage.py runserver 
 
