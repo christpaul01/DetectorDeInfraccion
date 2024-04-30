@@ -80,6 +80,20 @@ class Camara(models.Model):
     id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE)
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)
+    
+**
+
+Note: When defining a foreign key field in Django models, it is not necessary for the
+referenced model (in this case, Direccion) to exist at the time you define the foreign key. 
+Django allows you to define relationships between models even if the related model
+hasn't been created yet. 
+
+However, when you later run the database migrations using python manage.py migrate,
+Django will validate the foreign key relationship and ensure that the referenced 
+model exists. If the referenced model (Direccion) does not exist at that point, 
+the migration process will fail with an error.
+
+**
 
 10) Migrate. Navigate to the /DetectorDeInfraccion folder and run this cmd:
 
