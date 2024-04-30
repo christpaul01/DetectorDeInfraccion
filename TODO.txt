@@ -97,7 +97,36 @@ the migration process will fail with an error.
 
 10) Migrate. Navigate to the /DetectorDeInfraccion folder and run this cmd:
 
+**
+Note: Now when we have described a Model in the models.py file, we must run a command
+to actually create the table in the database. 
+
+**
 python3 manage.py makemigrations camaras 
 
+# Django creates a file describing the changes and stores the file in the ../camaras/migrations/ folder:
+
+
+11) Run the migrate command 
+**
+Note: The table is not created yet, you will have to run one more command, then Django 
+will create and execute an SQL statement, based on the content of the new file 
+in the /migrations/ folder.
+
+**
+
+python3 manage.py migrate 
+
+
+12) View Executed SQL
+
+python3 manage.py sqlmigrate camaras 0001 
+
+# 0001 is the ID of the first camaras migrations
+
+13) After each change in the models, run:
+
+python3 manage.py makemigrations model_name #(model_name = camaras)
+python3 manage.py migrate 
 
 
