@@ -1,3 +1,8 @@
+URL por mirar:
+CREATE DJANGO PROJECT: https://www.w3schools.com/django/django_create_project.php 
+DJANGO MODELS: https://docs.djangoproject.com/en/5.0/topics/db/models/
+VISION COMP/ CONVERSION DE MATRICULAS: https://github.com/computervisioneng/automatic-number-plate-recognition-python-yolov8/blob/main/util.py
+
 1) Create App (camara):
 
 python3 manage.py startapp camaras
