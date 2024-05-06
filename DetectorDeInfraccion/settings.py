@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "camaras.apps.CamarasConfig",
-    "detectApp.apps.DetectappConfig"
+    "detectApp.apps.DetectappConfig",
+    "account.apps.AccountConfig"
 ]
 
 MIDDLEWARE = [
