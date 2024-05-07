@@ -20,3 +20,6 @@ class Camara(models.Model):
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f"{self.id_camara} {self.nombre_camara}"
+

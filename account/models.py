@@ -11,6 +11,6 @@ class Account(models.Model):
         choices = [('MALE', 'MALE'),('FEMALE', 'FEMALE')])
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.username} - {self.user.first_name} {self.user.last_name}"
 
 
