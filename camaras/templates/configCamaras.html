@@ -16,8 +16,12 @@
     <div class="container">
         <h1>Detector De Infraccion</h1>
         <p>Aqui podras configurar las camaras del sistema</p>
-        <p>Camera Name: {{ camera_name }}</p>
-        <p>Camera Location: {{ camera_location }}</p>
+        {% if camera_name and camera_location %}
+            <p>Camera Name: {{ camera_name }}</p>
+            <p>Camera Location: {{ camera_location }}</p>
+        {% else %}
+            <p>No camera configured yet</p>
+        {% endif %}
         <a href="http://localhost:8000/camaras">Configurar Camaras</a>
 
         <form method="post" action="{% url 'camaras' %}">
