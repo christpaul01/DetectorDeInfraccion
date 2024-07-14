@@ -22,7 +22,7 @@
         {% else %}
             <p>No camera configured yet</p>
         {% endif %}
-        <a href="http://localhost:8000/camaras">Configurar Camaras</a>
+        <a href="{% url 'camaras' %}">Configurar Camaras</a>
 
         <form method="post" action="{% url 'camaras' %}">
             {% csrf_token %}
