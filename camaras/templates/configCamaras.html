@@ -19,6 +19,20 @@
         <p>Camera Name: {{ camera_name }}</p>
         <p>Camera Location: {{ camera_location }}</p>
         <a href="http://localhost:8000/camaras">Configurar Camaras</a>
+
+        <form method="post" action="{% url 'camaras' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="camera_name">Camera Name</label>
+                <input type="text" class="form-control" id="camera_name" name="camera_name" required>
+            </div>
+            <div class="form-group">
+                <label for="camera_location">Camera Location</label>
+                <input type="text" class="form-control" id="camera_location" name="camera_location" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+
     </div>
 </body>
 </html>
