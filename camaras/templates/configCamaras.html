@@ -11,12 +11,14 @@
             margin-top: 100px;
         }
     </style>
-
-    <h1>Detector De Infraccion</h1>
-    <p>Aqui podras configurar las camaras del sistema</p>
-    <a href="http://localhost:8000/camaras">Configurar Camaras</a>
 </head>
 <body>
-
+    <div class="container">
+        <h1>Detector De Infraccion</h1>
+        <p>Aqui podras configurar las camaras del sistema</p>
+        <p>Camera Name: {{ camera_name }}</p>
+        <p>Camera Location: {{ camera_location }}</p>
+        <a href="http://localhost:8000/camaras">Configurar Camaras</a>
+    </div>
 </body>
 </html>
