@@ -1,0 +1,31 @@
+{% extends "./BaseCamaras.html" %}
+ <p>Aqui podras configurar las camaras del sistema</p>
+ <a href="http://localhost:8000/camaras">Configurar Camaras</a>
+
+{% block body %}
+<div class="row">
+    <div class="col-md-4 offset-md-4"></div>
+     <h1> Edición de Camaras</h1>
+          <div class="card">
+              <div class="card-body" >
+                  <form action="/edicionCamara/" method="POST"> {%csrf_token%}
+                      <div class="form-group">
+                          <input type="text" id="idCamara" name="idCamara" value="{{camara.id_camara}}" class="form-control"  min="1" max="9" readonly required>
+                      </div>
+                      <div class="form-group">
+                          <input type="text" id="nombreCamara" name="nombreCamara" value="{{camara.nombre_camara}}" class="form-control" placeholder="Nombre"  maxlength="20" required>
+                      </div>
+                      <div class="form-group">
+                          <input type="text" id="estadoCamara" name="estadoCamara" value="{{camara.estado_camara}}" class="form-control" placeholder="Estado" minlength="6" maxlength="6" required>
+                      </div>
+                      <div class="form-group">
+                          <input type="text" id="resolucionCamara" name="resolucionCamara" value="{{camara.resolucion_camara}}" class="form-control" placeholder="Resolucion" minlength="6" maxlength="6" required>
+                      </div>
+                       <div class="form-group">
+                           <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      </div>
+{% endblock %}
