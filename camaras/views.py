@@ -23,6 +23,7 @@ def editarCamara(request,id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
     return render(request,'EditarCamara.html', {"camara": camara})
 
+#Error para completar la edicion, se supone que hay que enviar el id_camara pero en el tutorial no lo hacen de esa forma
 def edicionCamara(request):
     idCamara = request.POST['idCamara']
     nombre = request.POST['nombreCamara']
