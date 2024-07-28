@@ -21,7 +21,7 @@ def registarCamara(request):
 
 def editarCamara(request,id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
-    return render(request,'EditarCamara.html', {"camara": camara})
+    return render(request,'editarCamara.html', {"camara": camara})
 
 #Error para completar la edicion, se supone que hay que enviar el id_camara pero en el tutorial no lo hacen de esa forma
 def edicionCamara(request):
@@ -30,7 +30,7 @@ def edicionCamara(request):
     estado = request.POST['estadoCamara']
     resolucionCamara = request.POST['resolucionCamara']
 
-    camara = Camara.objects.get(id_camara=id_camara)
+    camara = Camara.objects.get(id_camara=idCamara)
     camara.id_camara = idCamara
     camara.nombre_camara = nombre
     camara.estado_camara = estado
