@@ -16,8 +16,18 @@
                           <input type="text" id="nombreCamara" name="nombreCamara" value="{{camara.nombre_camara}}" class="form-control" placeholder="Nombre"  maxlength="20" required>
                       </div>
                       <div class="form-group">
-                          <input type="text" id="estadoCamara" name="estadoCamara" value="{{camara.estado_camara}}" class="form-control" placeholder="Estado" minlength="6" maxlength="6" required>
-                      </div>
+                        <label for="estadoCamara">Estado de la Cámara</label>
+                        <select class="form-control" id="estadoCamara" name="estadoCamara" required>
+                            {% if camara.estado_camara == 'activo' %}
+                            <option value="Activado" selected>Activado</option>
+                            <option value="Desactivado">Desactivado</option>
+                            {% else %}
+                            <option value="Activado">Activado</option>
+                            <option value="Desactivado" selected>Desactivado</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
                       <div class="form-group">
                           <input type="text" id="resolucionCamara" name="resolucionCamara" value="{{camara.resolucion_camara}}" class="form-control" placeholder="Resolucion" minlength="6" maxlength="6" required>
                       </div>
