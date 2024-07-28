@@ -11,7 +11,7 @@
                   <form action="/registrarCamara/" method="POST"> {%csrf_token%}
 
                       <div class="form-group">
-                          <input type="number" id="idCamara" name="idCamara" class="form-control" value="{{ next_id }}" min="1" max="9" required>
+                          <input type="number" id="idCamara" name="idCamara" class="form-control" value="{{ next_id }}" readonly required>
                       </div>
 
                       <div class="form-group">
@@ -24,7 +24,7 @@
                        </div>
 
                       <div class="form-group">
-                          <input type="text" id="resolucionCamara" name="resolucionCamara" class="form-control" placeholder="Resolucion" minlength="9" maxlength="10" required>
+                          <input type="text" id="resolucionCamara" name="resolucionCamara" class="form-control" placeholder="Resolucion" minlength="6" maxlength="10" required>
                       </div>
                        <div class="form-group">
                            <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
