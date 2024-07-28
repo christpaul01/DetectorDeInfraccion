@@ -1,0 +1,18 @@
+{% extends "./BaseCamaras.html" %}
+ <p>Se ha encontrado un error</p>
+ <a href="http://localhost:8000/camaras">Volver al inicio</a>
+
+{% block body %}
+    {% if error_type and error_message%}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">{{ error_type }}</h4>
+            <p>{{ error_message }}</p>
+        </div>
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">Se ha encontrado un error</h4>
+            <p>Ocurrió un error inesperado. Por favor, inténtalo de nuevo más tarde.</p>
+        </div>
+    {% endif %}
+
+{% endblock %}

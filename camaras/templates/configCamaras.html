@@ -9,9 +9,11 @@
           <div class="card">
               <div class="card-body" >
                   <form action="/registrarCamara/" method="POST"> {%csrf_token%}
+
                       <div class="form-group">
-                          <input type="number" id="idCamara" name="idCamara" class="form-control"  min="1" max="9" required>
+                          <input type="number" id="idCamara" name="idCamara" class="form-control" value="{{ next_id }}" min="1" max="9" required>
                       </div>
+
                       <div class="form-group">
                           <input type="text" id="nombreCamara" name="nombreCamara" class="form-control" placeholder="Nombre"  maxlength="20" required>
                       </div>
@@ -37,7 +39,7 @@
             <table class="table table-striped">
               <thead>
                 <tr>
-                  <th>#</th>
+{#                  <th>#</th>#}
                   <th>ID</th>
                   <th>Nombre</th>
                   <th>Estado</th>
@@ -48,7 +50,7 @@
              <tbody>
                  {% for c in camaras %}
                  <tr>
-                       <td>{{forloop.counter}}</td>
+{#                       <td>{{forloop.counter}}</td>#}
                        <td>{{c.id_camara}}</td>
                        <td>{{c.nombre_camara}}</td>
                        <td>{{c.estado_camara}}</td>
