@@ -50,17 +50,30 @@ def edicionCamara(request):
     estado = request.POST['estadoCamara']
     resolucionCamara = request.POST['resolucionCamara']
 
-    camara = Camara.objects.get(id_camara=idCamara)
-    camara.id_camara = idCamara
-    camara.nombre_camara = nombre
-    camara.estado_camara = estado
-    camara.resolucion_camara = resolucionCamara
-    camara.save()
-    return redirect('/')
+    try :
+        camara = Camara.objects.get(id_camara=idCamara)
+        camara.id_camara = idCamara
+        camara.nombre_camara = nombre
+        camara.estado_camara = estado
+        camara.resolucion_camara = resolucionCamara
+        camara.save()
+        return redirect('/')
+    except Camara.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No existe la cámara de ID:" + idCamara
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
 
 def eliminarCamara(request,id_camara):
-    camara = Camara.objects.get(id_camara=id_camara)
-    camara.delete()
+    try:
+        camara = Camara.objects.get(id_camara=id_camara)
+        camara.delete()
+    except Camara.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No existe la cámara solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
     return redirect('/')
 
 def camaras(request):
