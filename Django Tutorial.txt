@@ -3,6 +3,10 @@ CREATE DJANGO PROJECT: https://www.w3schools.com/django/django_create_project.ph
 DJANGO MODELS: https://docs.djangoproject.com/en/5.0/topics/db/models/
 VISION COMP/ CONVERSION DE MATRICULAS: https://github.com/computervisioneng/automatic-number-plate-recognition-python-yolov8/blob/main/util.py
 
+
+CRUD Completo con Django y SQLite3: ORM, Bootstrap, JavaScript
+https://www.youtube.com/watch?v=uSbDMs7Y9yI
+
 1) Create App (camara):
 
 python3 manage.py startapp camaras
