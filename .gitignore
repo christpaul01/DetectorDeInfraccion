@@ -1,0 +1,9 @@
+
+*.txt~
+/account/__pycache__
+/account/migrations/__pycache__
+/camaras/__pycache__
+/camaras/__pycache__
+/camaras/__pycache__
+*.pyc
+*.pyc

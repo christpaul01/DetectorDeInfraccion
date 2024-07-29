@@ -1,6 +1,5 @@
 from django.db import models
 
-
 # Create your models here.
 
 class Direccion(models.Model):
@@ -11,18 +10,16 @@ class Direccion(models.Model):
     pais = models.CharField(max_length=255)
     detalles = models.CharField(max_length=255)
 
-
 class Camara(models.Model):
     id_camara = models.AutoField(primary_key=True)
     nombre_camara = models.CharField(max_length=255)
     url_camara = models.CharField(max_length=255)
     estado_camara = models.CharField(max_length=255)
     frame_rate = models.CharField(max_length=255)
-    id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
+    id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE)
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f"{self.id_camara} {self.nombre_camara}"
 
-def __str__(self):
-    texto: "{0}"
-    return texto.format(self.id_nombre_camara)
