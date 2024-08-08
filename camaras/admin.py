@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import Camara
 
 # Register your models here.
 
-class CamaraAdmin(admin.ModelAdmin):
-  list_display = ("id_camara", "nombre_camara",)
+from .models import Camara, Direccion
+# Register your models here.
 
+admin.site.register(Camara)
+admin.site.register(Direccion)
 
-admin.site.register(Camara, CamaraAdmin)
