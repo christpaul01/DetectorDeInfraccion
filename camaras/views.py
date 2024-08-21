@@ -77,5 +77,7 @@ def eliminarCamara(request,id_camara):
     return redirect('/')
 
 def camaras(request):
+
     template = loader.get_template('configCamaras.html')
     return HttpResponse(template.render())
+

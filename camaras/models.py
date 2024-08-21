@@ -23,6 +23,7 @@ class Camara(models.Model):
     notas = models.CharField(max_length=255)
 
 
+
 def __str__(self):
     texto: "{0}"
     return texto.format(self.id_nombre_camara)

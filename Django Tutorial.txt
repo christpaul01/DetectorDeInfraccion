@@ -3,6 +3,10 @@ CREATE DJANGO PROJECT: https://www.w3schools.com/django/django_create_project.ph
 DJANGO MODELS: https://docs.djangoproject.com/en/5.0/topics/db/models/
 VISION COMP/ CONVERSION DE MATRICULAS: https://github.com/computervisioneng/automatic-number-plate-recognition-python-yolov8/blob/main/util.py
 
+
+CRUD Completo con Django y SQLite3: ORM, Bootstrap, JavaScript
+https://www.youtube.com/watch?v=uSbDMs7Y9yI
+
 1) Create App (camara):
 
 python3 manage.py startapp camaras
@@ -137,4 +141,73 @@ python3 manage.py migrate
 14) Run the project
 
 py manage.py runserver 
+
+
+URL por mirar: https://www.youtube.com/watch?v=kRJpQxi2jIo
+
+15) Create USER
+py manage.py createsuperuser
+
+
+16) Create an account APP
+
+17) Associate the account APP with the DJANGO built-in user 
+DetectorDeInfraccion/account/models.py
+
+from django.contrib import admin
+from .models import Account
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
+
+
+# Register your models here.
+
+class AccountInline(admin.StackedInline):
+    model = Account
+    can_delete = False
+    verbose_name_plural = 'Accounts'
+
+
+class CustomizedUserAdmin (UserAdmin):
+    inlines = (AccountInline, )
+
+
+admin.site.unregister(User)
+admin.site.register(User, CustomizedUserAdmin)
+
+18) Make the List Display More Reader-Friendly
+
+DetectorDeInfracciones/camaras/models.py
+
+class Camara(models.Model):
+    id_camara = models.AutoField(primary_key=True)
+    nombre_camara = models.CharField(max_length=255)
+    url_camara = models.CharField(max_length=255)
+    estado_camara = models.CharField(max_length=255)
+    frame_rate = models.CharField(max_length=255)
+    id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE)
+    resolucion_camara = models.CharField(max_length=255)
+    notas = models.CharField(max_length=255)
+    
+    def __str__(self):
+    return f"{self.id_camara} {self.nombre_camara}"
+
+19) Set list_display 
+
+DetectorDeInfracciones/camaras/admin.py
+
+
+from django.contrib import admin
+from .models import Camara
+
+# Register your models here.
+
+class CamaraAdmin(admin.ModelAdmin):
+  list_display = ("id_camara", "nombre_camara",)
+
+
+admin.site.register(Camara, CamaraAdmin)
+
+
+
 
