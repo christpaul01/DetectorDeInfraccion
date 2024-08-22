@@ -5,7 +5,7 @@ from django.db import models
 
 class Direccion(models.Model):
     id_direccion = models.AutoField(primary_key=True)
-    nombre_direccion = models.CharField(max_length=255)
+    nombre_direccion = models.CharField(max_length=255, )
     municipio = models.CharField(max_length=255)
     ciudad = models.CharField(max_length=255)
     pais = models.CharField(max_length=255)
