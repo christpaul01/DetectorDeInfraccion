@@ -23,6 +23,42 @@ class Camara(models.Model):
     notas = models.CharField(max_length=255)
 
 
+# class SpeedLine(models.Model):
+#     id_speedline = models.AutoField(primary_key=True)
+#     medicion = models.CharField(max_length=255)
+#     coords = models.CharField(max_length=255)
+#     notas = models.CharField(max_length=255)
+
+
+class Infraccion(models.Model):
+    id_infraccion = models.AutoField(primary_key=True)
+    id_vehiculo = models.CharField(max_length=25)
+    id_tipo_vehiculo = models.ForeignKey('TipoVehiculo', on_delete=models.CASCADE)
+    id_camara = models.ForeignKey('Camara', on_delete=models.CASCADE)
+    fecha_infraccion = models.DateTimeField()
+    velocidad_estimada = models.FloatField()
+    tipo_infraccion = models.ForeignKey('TipoInfraccion', on_delete=models.CASCADE)
+    id_videoinfraccion = models.CharField(max_length=255)
+    frame_infraccion = models.CharField(max_length=255)
+
+class TipoVehiculo(models.Model):
+    id_tipo_vehiculo = models.AutoField(primary_key=True)
+    nombre_tipo_vehiculo = models.CharField(max_length=255)
+    detalles = models.CharField(max_length=255)
+
+class TipoInfraccion(models.Model):
+    id_tipo_infraccion = models.AutoField(primary_key=True)
+    nombre_tipo_infraccion = models.CharField(max_length=255)
+    cant_pagar = models.CharField(max_length=255)
+    detalles = models.CharField(max_length=255)
+
+class Matricula:
+    id_matricula = models.AutoField(primary_key=True)
+    id_vehiculo = models.ForeignKey('Vehiculo', on_delete=models.CASCADE)
+    matricula = models.CharField(max_length=255)
+    imagen_matricula = models.ImageField(upload_to='matriculas')
+
+
 
 def __str__(self):
     texto: "{0}"
