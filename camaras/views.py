@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.template import loader
 from .models import Camara, Direccion
 from django.db.models import Max
+from tkinter import filedialog
 
 
 def get_next_camera_id():
@@ -40,7 +41,11 @@ def registarCamara(request):
     estado = request.POST['estadoCamara']
     resolucionCamara = request.POST['resolucionCamara']
 
-    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, estado_camara=estado, resolucion_camara=resolucionCamara)
+    url_video_path = filedialog.askopenfilename()
+
+
+
+    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, resolucion_camara=resolucionCamara)
     return redirect('/')
 
 def editarCamara(request,id_camara):
