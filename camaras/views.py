@@ -40,7 +40,7 @@ def registarCamara(request):
     idCamara = get_next_camera_id()
     nombre = request.POST['nombreCamara']
     estado = request.POST['estadoCamara']
-    resolucionCamara = request.POST['resolucionCamara']
+    #resolucionCamara = request.POST['resolucionCamara']
 
     url_video_path = filedialog.askopenfilename()
     try:
@@ -81,14 +81,14 @@ def edicionCamara(request):
     idCamara = request.POST['idCamara']
     nombre = request.POST['nombreCamara']
     estado = request.POST['estadoCamara']
-    resolucionCamara = request.POST['resolucionCamara']
+    #resolucionCamara = request.POST['resolucionCamara']
 
     try :
         camara = Camara.objects.get(id_camara=idCamara)
         camara.id_camara = idCamara
         camara.nombre_camara = nombre
         camara.estado_camara = estado
-        camara.resolucion_camara = resolucionCamara
+        #camara.resolucion_camara = resolucionCamara
         camara.save()
         return redirect('/')
     except Camara.DoesNotExist:
