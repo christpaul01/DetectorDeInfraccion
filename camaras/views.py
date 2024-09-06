@@ -4,6 +4,7 @@ from django.template import loader
 from .models import Camara, Direccion
 from django.db.models import Max
 from tkinter import filedialog
+import cv2
 
 
 def get_next_camera_id():
@@ -42,10 +43,25 @@ def registarCamara(request):
     resolucionCamara = request.POST['resolucionCamara']
 
     url_video_path = filedialog.askopenfilename()
+    try:
+        cap = cv2.VideoCapture(url_video_path)
+        # get fps from cap
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        # get resolution from cap
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # put resolution in a string
+        resolucionCamara = str(width) + "x" + str(height)
+        cap.release()
+    except cv2.error as e:
+        error_type = "Error de procesamiento"
+        error_message = "No se pudo obtener las informaciones del video."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
 
 
 
-    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, resolucion_camara=resolucionCamara)
+    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara)
     return redirect('/')
 
 def editarCamara(request,id_camara):
