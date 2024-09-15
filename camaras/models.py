@@ -23,6 +23,18 @@ class Camara(models.Model):
     notas = models.CharField(max_length=255)
 
 
+class Usuario(models.Model):
+    id_usuario = models.AutoField(primary_key=True)
+    nombre_usuario = models.CharField(max_length=100)
+    clave_usuario = models.CharField(max_length=100)
+    rol_usuario = models.CharField(max_length=10)
+
+class Video(models.Model):
+    caption=models.CharField(max_length=100)
+    video=models.FileField(upload_to="video/%y")
+    def __str__(self):
+       return self.caption
+
 def __str__(self):
     texto: "{0}"
     return texto.format(self.id_nombre_camara)

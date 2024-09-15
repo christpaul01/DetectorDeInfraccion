@@ -7,5 +7,6 @@ urlpatterns = [
     path('registrarCamara/', views.registarCamara),
     path('editarCamara/<id_camara>', views.editarCamara),
     path('edicionCamara/', views.edicionCamara),
-    path('eliminarCamara/<id_camara>', views.eliminarCamara)
+    path('eliminarCamara/<id_camara>', views.eliminarCamara),
+    path('video', views.index)
 ]

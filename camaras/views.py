@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
-from .models import Camara
+from .models import Camara, Video
 from django.db.models import Max
+
 
 
 def get_next_camera_id():
@@ -75,6 +76,10 @@ def eliminarCamara(request,id_camara):
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
     return redirect('/')
+
+def index(request):
+    video = Video.objects.all()
+    return render(request,"index.html",{"video":video})
 
 def camaras(request):
     template = loader.get_template('configCamaras.html')
