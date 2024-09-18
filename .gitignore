@@ -8,3 +8,4 @@
 *.pyc
 *.pyc
 /camaras/__pycache__
+*.pyc

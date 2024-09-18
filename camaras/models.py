@@ -23,12 +23,26 @@ class Camara(models.Model):
     notas = models.CharField(max_length=255)
 
 
-# class SpeedLine(models.Model):
-#     id_speedline = models.AutoField(primary_key=True)
-#     medicion = models.CharField(max_length=255)
-#     coords = models.CharField(max_length=255)
-#     notas = models.CharField(max_length=255)
 
+class ROI(models.Model):
+    TIPO_ROI_CHOICES = [
+        ('N', 'Normal'),
+        ('P', 'Prohibido'),
+    ]
+    ESTADO_ROI_CHOICES = [
+        ('A', 'Activo'),
+        ('I', 'Inactivo'),
+    ]
+
+    id_roi = models.AutoField(primary_key=True)
+    id_camara = models.ForeignKey(Camara, on_delete=models.CASCADE)
+    estado_roi = models.CharField(max_length=1, choices=ESTADO_ROI_CHOICES, default='A')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    tipo_roi = models.CharField(max_length=1, choices=TIPO_ROI_CHOICES, default='N')
+    coordenadas = models.CharField(max_length=50, blank= False, null= False)
+    flujo_vehicular = models.IntegerField(null=True, blank=True)
+    condicion_roi = models.CharField(max_length=255, blank=True, null=True)
+    notas = models.TextField(blank=True, null=True)
 
 class Infraccion(models.Model):
     id_infraccion = models.AutoField(primary_key=True)

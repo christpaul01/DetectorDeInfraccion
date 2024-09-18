@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
-from .models import Camara, Direccion
-from django.db.models import Max
+from .models import Camara, Direccion, ROI
+from django.db.models import Max, DateField
 from tkinter import filedialog
 import cv2
+from . import util as utilidades
 
 
 def get_next_camera_id():
@@ -40,28 +41,52 @@ def registarCamara(request):
     idCamara = get_next_camera_id()
     nombre = request.POST['nombreCamara']
     estado = request.POST['estadoCamara']
+
+    isROINormalSelected = request.POST.get('ROINormal', True)
+    isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
+
     #resolucionCamara = request.POST['resolucionCamara']
 
     url_video_path = filedialog.askopenfilename()
     try:
-        cap = cv2.VideoCapture(url_video_path)
-        # get fps from cap
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        # get resolution from cap
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # obtaining video information
+        # TODO: Validate if the file is a valid video file
+        video_info = utilidades.get_video_info(url_video_path)
+
+        width = video_info[0]
+        height = video_info[1]
+        fps = video_info[2]
+
         # put resolution in a string
         resolucionCamara = str(width) + "x" + str(height)
-        cap.release()
+
     except cv2.error as e:
         error_type = "Error de procesamiento"
         error_message = "No se pudo obtener las informaciones del video."
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
 
-
-
     Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara)
+
+    # get created Camara id
+
+    camaraInstance = Camara.objects.get(id_camara=idCamara)
+
+    if isROINormalSelected:
+        fechaCreacion = DateField(auto_now_add=True)
+        print("ROI Normal seleccionado")
+        coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Normal")
+        print ("Coordenadas Normal`: ", coordenadas_n)
+
+        ROI.objects.create(id_camara=camaraInstance, coordenadas=coordenadas_n, estado_roi='A', tipo_roi='N', fecha_creacion=fechaCreacion)
+
+    if isROIProhibidoSelected:
+        fechaCreacion = DateField(auto_now_add=True)
+        print("ROI Prohibido seleccionado")
+        coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Prohibido")
+        ROI.objects.create(id_camara=camaraInstance, coordenadas= coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fechaCreacion)
+
+
     return redirect('/')
 
 def editarCamara(request,id_camara):
@@ -88,7 +113,6 @@ def edicionCamara(request):
         camara.id_camara = idCamara
         camara.nombre_camara = nombre
         camara.estado_camara = estado
-        #camara.resolucion_camara = resolucionCamara
         camara.save()
         return redirect('/')
     except Camara.DoesNotExist:
