@@ -1,0 +1,49 @@
+{% extends "./BaseCamaras.html" %}
+ <p>Aqui podras configurar las camaras del sistema</p>
+ <a href="http://localhost:8000/camaras">Configurar Camaras</a>
+
+{% block body %}
+
+<h1> Gestión de Camaras</h1>
+          <div class="card">
+              <div class="card-body" >
+                  <form action="/registrarCamara/" method="POST"> {%csrf_token%}
+
+                      <div class="form-group">
+                          <legend>ID de Camara</legend>
+                          <input type="number" id="idCamara" name="idCamara" class="form-control" value="{{ next_id }}" readonly required>
+                      </div>
+
+                      <div class="form-group">
+                          <legend>Nombre de Camara</legend>
+                          <input type="text" id="nombreCamara" name="nombreCamara" class="form-control" placeholder="Nombre"  maxlength="20" required>
+                      </div>
+                       <div class="form-group"> <label for="estadoCamara">Estado</label>
+                           <select id="estadoCamara" name="estadoCamara" class="form-control" required>
+                           <option value="">Seleccionar estado</option> <option value="Activado">Activo</option> <option value="Desactivado">Desactivado</option>
+                           </select>
+                       </div>
+                      <!-- Seleccion de tipos de ROI -->
+                        <div class="form-group">
+                            <fieldset>
+                                  <legend>Elegir tipos de Region de Interes (ROI):</legend>
+                                  <div>
+                                    <input type="checkbox" id="ROINormal" name="ROINormal" disabled checked />
+                                    <label for="ROINormal">Normal</label>
+                                  </div>
+
+                                  <div>
+                                    <input type="checkbox" id="ROIProhibido" name="ROIProhibido" />
+                                    <label for="ROIProhibido">Prohibido</label>
+                                  </div>
+                            </fieldset>
+                        </div>
+                       <div class="form-group">
+                           <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+
+
+{% endblock %}
