@@ -144,7 +144,10 @@ popup.wait_window()
 # this is the path to the video folder
 VIDEOS_DIR = os.path.join('.', 'videos')
 # Open file dialog and get the selected file path
-video_path = filedialog.askopenfilename()
+#video_path = filedialog.askopenfilename()
+
+# make video path 127.0.0.1/8080
+video_path = 'http://127.0.0.1:8080'
 
 if not video_path:
     print("No file selected.")

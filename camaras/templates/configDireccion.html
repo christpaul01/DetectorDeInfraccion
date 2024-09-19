@@ -1,0 +1,103 @@
+{% extends "./BaseCamaras.html" %}
+<p>Aqui podras configurar las direcciones del sistema</p>
+<a href="http://localhost:8000/camaras">Configurar Direccion</a>
+
+{% block body %}
+    <div class="row">
+        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
+            <h1> Gestión de Direcciones</h1>
+            <div class="card">
+                <div class="card-body">
+                    <form id="direccionForm" action="/registrarDireccion/" method="POST"> {% csrf_token %}
+                        <!-- ID de Dirección (readonly) -->
+                        <div class="form-group">
+                            <input type="number" id="idDireccion" name="idDireccion" class="form-control" value="{{ next_id }}" readonly required>
+                        </div>
+
+                        <!-- Nombre de Dirección -->
+                        <div class="form-group">
+                            <input type="text" id="nombreDireccion" name="nombreDireccion" class="form-control" placeholder="Nombre de Dirección" maxlength="255" required>
+                        </div>
+
+                        <!-- Municipio -->
+                        <div class="form-group">
+                            <input type="text" id="municipio" name="municipio" class="form-control" placeholder="Municipio" maxlength="255" required>
+                        </div>
+
+                        <!-- Ciudad -->
+                        <div class="form-group">
+                            <input type="text" id="ciudad" name="ciudad" class="form-control" placeholder="Ciudad" maxlength="255" required>
+                        </div>
+
+                        <!-- País -->
+                        <div class="form-group">
+                            <input type="text" id="pais" name="pais" class="form-control" placeholder="País" maxlength="255" required>
+                        </div>
+
+                        <!-- Detalles -->
+                        <div class="form-group">
+                            <input type="text" id="detalles" name="detalles" class="form-control" placeholder="Detalles" maxlength="255" required>
+                        </div>
+
+                        <!-- Botón de Guardar -->
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
+            <h1>Config de Direcciones</h1>
+            <div class="table-responsive py-2">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Municipio</th>
+                            <th>Ciudad</th>
+                            <th>País</th>
+                            <th>Detalles</th>
+                            <th colspan="2">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in direcciones %}
+                        <tr>
+                            <td>{{ d.id_direccion }}</td>
+                            <td>{{ d.nombre_direccion }}</td>
+                            <td>{{ d.municipio }}</td>
+                            <td>{{ d.ciudad }}</td>
+                            <td>{{ d.pais }}</td>
+                            <td>{{ d.detalles }}</td>
+                            <td><a href="editarDireccion/{{ d.id_direccion }}" class="btn btn-info">Editar</a></td>
+                            <td><a href="eliminarDireccion/{{ d.id_direccion }}" class="btn btn-danger btnEliminacion">Eliminar</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading spinner (initially hidden) -->
+    <div id="loadingSpinner" class="d-none" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+
+    <!-- JavaScript to handle loading screen -->
+    <script>
+        const form = document.getElementById('direccionForm');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        form.addEventListener('submit', function() {
+            loadingSpinner.classList.remove('d-none'); // Show spinner
+        });
+    </script>
+
+{% endblock %}
