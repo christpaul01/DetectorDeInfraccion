@@ -1,21 +1,175 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
+from .models import Camara, Direccion, ROI
+from django.db.models import Max, DateField
+from tkinter import filedialog
+import cv2
+from . import util as utilidades
+
+
+def get_next_camera_id():
+    """
+    Returns the next available ID for a new camera.
+    """
+    if Camara.objects.exists():
+        max_id = Camara.objects.aggregate(Max('id_camara'))['id_camara__max']
+        return max_id + 1
+    else:
+        return 1
+
+def get_next_direccion_id():
+    """
+    Returns the next available ID for a new direccion.
+    """
+    if Direccion.objects.exists():
+        max_id = Direccion.objects.aggregate(Max('id_direccion'))['id_direccion__max']
+        return max_id + 1
+    else:
+        return 1
+
+def home(request):
+    camaras = Camara.objects.all()
+    next_id = get_next_camera_id()
+    context = {"camaras": camaras, "next_id": next_id}
+    return render(request, "configCamaras.html", context)
+
+
+# Bloque Camaras
+
+def registarCamara(request):
+    idCamara = get_next_camera_id()
+    nombre = request.POST['nombreCamara']
+    estado = request.POST['estadoCamara']
+
+    isROINormalSelected = request.POST.get('ROINormal', True)
+    isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
+
+    #resolucionCamara = request.POST['resolucionCamara']
+
+    url_video_path = filedialog.askopenfilename()
+    try:
+        # obtaining video information
+        # TODO: Validate if the file is a valid video file
+        video_info = utilidades.get_video_info(url_video_path)
+
+        width = video_info[0]
+        height = video_info[1]
+        fps = video_info[2]
+
+        # put resolution in a string
+        resolucionCamara = str(width) + "x" + str(height)
+
+    except cv2.error as e:
+        error_type = "Error de procesamiento"
+        error_message = "No se pudo obtener las informaciones del video."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
+    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara)
+
+    # get created Camara id
+
+    camaraInstance = Camara.objects.get(id_camara=idCamara)
+
+    if isROINormalSelected:
+        fechaCreacion = DateField(auto_now_add=True)
+        print("ROI Normal seleccionado")
+        coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Normal")
+        print ("Coordenadas Normal`: ", coordenadas_n)
+
+        ROI.objects.create(id_camara=camaraInstance, coordenadas=coordenadas_n, estado_roi='A', tipo_roi='N', fecha_creacion=fechaCreacion)
+
+    if isROIProhibidoSelected:
+        fechaCreacion = DateField(auto_now_add=True)
+        print("ROI Prohibido seleccionado")
+        coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Prohibido")
+        ROI.objects.create(id_camara=camaraInstance, coordenadas= coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fechaCreacion)
+
+
+    return redirect('/')
+
+def editarCamara(request,id_camara):
+    try:
+        camara = Camara.objects.get(id_camara=id_camara)
+        return render(request, 'editarCamara.html', {"camara": camara})
+    except Camara.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No se encontró la cámara solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+
+        return render(request, 'error.html', context)
+
+
+#Error para completar la edicion, se supone que hay que enviar el id_camara pero en el tutorial no lo hacen de esa forma
+def edicionCamara(request):
+    idCamara = request.POST['idCamara']
+    nombre = request.POST['nombreCamara']
+    estado = request.POST['estadoCamara']
+    #resolucionCamara = request.POST['resolucionCamara']
+
+    try :
+        camara = Camara.objects.get(id_camara=idCamara)
+        camara.id_camara = idCamara
+        camara.nombre_camara = nombre
+        camara.estado_camara = estado
+        camara.save()
+        return redirect('/')
+    except Camara.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No existe la cámara de ID:" + idCamara
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
+
+def eliminarCamara(request,id_camara):
+    try:
+        camara = Camara.objects.get(id_camara=id_camara)
+        camara.delete()
+    except Camara.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No existe la cámara solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+    return redirect('/')
 
 def camaras(request):
-    if request.method == 'POST':
-        # Handle form submission
-        camera_name = request.POST.get('camera_name')
-        camera_location = request.POST.get('camera_location')
-        if camera_name and camera_location:
-            print(camera_name, camera_location)
-        else:
-            print('Invalid form submission')
 
-        return redirect('camaras')
-    else:
-        context = {
-            # 'camera_name': 'Camera 1',
-            # 'camera_location': 'Main Street'
-        }
-        return render(request, 'configCamaras.html', context)
+    template = loader.get_template('configCamaras.html')
+    return HttpResponse(template.render())
+
+# NOTE: Bloque Direccion
+
+
+def listarDirecciones(request):
+    direcciones = Direccion.objects.all()
+    context = {"direcciones": direcciones}
+    return render(request, 'listarDirecciones.html', context)
+
+def gestionDirecciones(request):
+    direcciones = Direccion.objects.all()
+    next_id = get_next_direccion_id()
+    context = {"next_id": next_id, "direcciones": direcciones}
+    return render(request, 'configDireccion.html', context)
+
+def eliminarDireccion(request, id_direccion):
+    try:
+        direccion = Direccion.objects.get(id_direccion=id_direccion)
+        direccion.delete()
+    except Direccion.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No se encontró la dirección solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+    return redirect('/direcciones/')
+
+def registrarDireccion(request):
+    idDireccion = request.POST['idDireccion']
+    nombreDireccion = request.POST['nombreDireccion']
+    municipio = request.POST['municipio']
+    ciudad = request.POST['ciudad']
+    pais = request.POST['pais']
+    detalles = request.POST['detalles']
+
+    Direccion.objects.create(id_direccion=idDireccion, nombre_direccion=nombreDireccion, municipio=municipio, ciudad=ciudad, pais=pais, detalles=detalles)
+    return redirect('/direcciones/')

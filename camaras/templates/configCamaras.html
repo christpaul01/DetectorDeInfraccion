@@ -1,42 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Configuracion de Camaras</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/jquery/3.2.1/jquery.min.js"></script>
-    <style>
-        .container{
-            margin-top: 100px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Detector De Infraccion</h1>
-        <p>Aqui podras configurar las camaras del sistema</p>
-        {% if camera_name and camera_location %}
-            <p>Camera Name: {{ camera_name }}</p>
-            <p>Camera Location: {{ camera_location }}</p>
-        {% else %}
-            <p>No camera configured yet</p>
-        {% endif %}
-        <a href="{% url 'camaras' %}">Configurar Camaras</a>
 
-        <form method="post" action="{% url 'camaras' %}">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="camera_name">Camera Name</label>
-                <input type="text" class="form-control" id="camera_name" name="camera_name" required>
-            </div>
-            <div class="form-group">
-                <label for="camera_location">Camera Location</label>
-                <input type="text" class="form-control" id="camera_location" name="camera_location" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-        </form>
+{% extends "./BaseCamaras.html" %}
+ <p>Aqui podras configurar las camaras del sistema</p>
+ <a href="http://localhost:8000/camaras">Configurar Camaras</a>
 
-    </div>
-</body>
-</html>
+{% block body %}
+ <div class="row">
+      <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
+          <h1> Gestión de Camaras</h1>
+          <div class="card">
+              <div class="card-body" >
+                  <form action="/registrarCamara/" method="POST"> {%csrf_token%}
+
+                      <div class="form-group">
+                          <legend>ID de Camara</legend>
+                          <input type="number" id="idCamara" name="idCamara" class="form-control" value="{{ next_id }}" readonly required>
+                      </div>
+
+                      <div class="form-group">
+                          <legend>Nombre de Camara</legend>
+                          <input type="text" id="nombreCamara" name="nombreCamara" class="form-control" placeholder="Nombre"  maxlength="20" required>
+                      </div>
+                       <div class="form-group"> <label for="estadoCamara">Estado</label>
+                           <select id="estadoCamara" name="estadoCamara" class="form-control" required>
+                           <option value="">Seleccionar estado</option> <option value="Activado">Activo</option> <option value="Desactivado">Desactivado</option>
+                           </select>
+                       </div>
+                      <!-- Seleccion de tipos de ROI -->
+                        <div class="form-group">
+                            <fieldset>
+                                  <legend>Elegir tipos de Region de Interes (ROI):</legend>
+                                  <div>
+                                    <input type="checkbox" id="ROINormal" name="ROINormal" disabled checked />
+                                    <label for="ROINormal">Normal</label>
+                                  </div>
+
+                                  <div>
+                                    <input type="checkbox" id="ROIProhibido" name="ROIProhibido" />
+                                    <label for="ROIProhibido">Prohibido</label>
+                                  </div>
+                            </fieldset>
+                        </div>
+                       <div class="form-group">
+                           <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      </div>
+      <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
+          <h1>Config de Camaras</h1>
+        <div class="table-responsive py-2">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+{#                  <th>#</th>#}
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Estado</th>
+                  <th>Resolución</th>
+                  <th colspan="2">Opciones</th>
+                </tr>
+             </thead>
+             <tbody>
+                 {% for c in camaras %}
+                 <tr>
+{#                       <td>{{forloop.counter}}</td>#}
+                       <td>{{c.id_camara}}</td>
+                       <td>{{c.nombre_camara}}</td>
+                       <td>{{c.estado_camara}}</td>
+                       <td>{{c.resolucion_camara}}</td>
+                       <td><a href="editarCamara/{{c.id_camara}}" class="btn btn-info">Editar</a> </td>
+                       <td><a href="eliminarCamara/{{c.id_camara}}" class="btn btn-danger btnEliminacion">Eliminar</a> </td>
+                        <td><a href="iniciarCamara/{{c.id_camara}}" class="btn btn-success btnIniciar">Iniciar</a> </td>
+                 </tr>
+                 {%  endfor %}
+             </tbody>
+          </table>
+        </div>
+      </div>
+ </div>
+{% endblock %}

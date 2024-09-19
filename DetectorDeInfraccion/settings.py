@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'DetectorDeInfraccion.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'camara.db',
+        'NAME': 'detectApp.db',
     }
 }
 
