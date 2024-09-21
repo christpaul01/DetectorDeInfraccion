@@ -22,6 +22,7 @@ class Camara(models.Model):
     frame_count = models.IntegerField()
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     video_length = models.IntegerField()
+    time_video = models.CharField(max_length=25)
     id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)

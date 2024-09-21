@@ -1,9 +1,22 @@
 import cv2
 
 import numpy as np
+import datetime
 import os
 import tkinter as tk
 from tkinter import filedialog
+
+def get_time_from_seconds(seconds):
+    """
+    Convierte una cantidad de segundos a una cadena de texto en formato HH:MM:SS.
+
+    Args:
+        seconds (int): La cantidad de segundos.
+
+    Returns:
+        str: Una cadena de texto en formato HH:MM:SS.
+    """
+    return str(datetime.timedelta(seconds=seconds))
 
 
 def get_video_info(video_path):
