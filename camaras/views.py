@@ -56,6 +56,9 @@ def registarCamara(request):
     #resolucionCamara = request.POST['resolucionCamara']
 
     url_video_path = filedialog.askopenfilename()
+
+    video_info = None
+
     try:
         # obtaining video information
         # TODO: Validate if the file is a valid video file
@@ -65,6 +68,7 @@ def registarCamara(request):
         height = video_info[1]
         fps = video_info[2]
         frame_count_video = video_info[3]
+        video_length = video_info[4]
 
         # put resolution in a string
         resolucionCamara = str(width) + "x" + str(height)
@@ -75,7 +79,15 @@ def registarCamara(request):
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
 
-    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara, frame_count=frame_count_video)
+    if video_info is not None:
+        Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path,
+                              estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara,
+                              frame_count=frame_count_video, video_length=video_length)
+    else:
+        error_type = "Error de procesamiento"
+        error_message = "No se pudo obtener las informaciones del video."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
 
     # get created Camara id
 

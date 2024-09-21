@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 
 
 # Create your models here.
@@ -19,6 +20,7 @@ class Camara(models.Model):
     estado_camara = models.CharField(max_length=25)
     frame_rate = models.CharField(max_length=25)
     frame_count = models.IntegerField()
+    video_length = models.IntegerField()
     id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)
