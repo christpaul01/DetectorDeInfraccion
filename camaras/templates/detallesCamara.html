@@ -1,0 +1,39 @@
+{% extends "./BaseCamaras.html" %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h1>Detalles de la Cámara</h1>
+        <div class="card">
+            <div class="card-header">
+                {{ camara.nombre_camara }}
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Información General</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>ID:</strong> {{ camara.id_camara }}</li>
+                    <li class="list-group-item"><strong>Nombre:</strong> {{ camara.nombre_camara }}</li>
+                    <li class="list-group-item"><strong>Estado:</strong> {{ camara.estado_camara }}</li>
+                    <li class="list-group-item"><strong>Resolución:</strong> {{ camara.resolucion_camara }}</li>
+                    <li class="list-group-item"><strong>Frame Rate:</strong> {{ camara.frame_rate }}</li>
+                    <li class="list-group-item"><strong>Frame Count:</strong> {{ camara.frame_count }}</li>
+                    <li class="list-group-item"><strong>Longitud del Video:</strong> {{ camara.video_length }} segundos</li>
+                    <li class="list-group-item"><strong>Tiempo de Video:</strong> {{ camara.time_video }}</li>
+                    <li class="list-group-item"><strong>Fecha de Creación:</strong> {{ camara.fecha_creacion|date:"d-m-Y H:i" }}</li>
+                    <li class="list-group-item"><strong>Dirección:</strong>
+                        {% if camara.id_direccion_camara %}
+                            {{ camara.id_direccion_camara.direccion }}
+                        {% else %}
+                            No asignada
+                        {% endif %}
+                    </li>
+                    <li class="list-group-item"><strong>Tiene ROI Prohibida:</strong> {{ has_roi_p }}</li>
+                    <li class="list-group-item"><strong>Notas:</strong> {{ camara.notas }}</li>
+                </ul>
+                <a href="/camaras/editarCamara/{{ camara.id_camara }}" class="btn btn-primary mt-3">Editar Cámara</a>
+                <a href="/camaras/" class="btn btn-secondary mt-3">Volver a la lista</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -127,6 +127,19 @@ def editarCamara(request,id_camara):
         return render(request, 'error.html', context)
 
 
+def detallesCamara(request, id_camara):
+    try:
+        camara = Camara.objects.get(id_camara=id_camara)
+        roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').first()
+        has_roi_p = roi_p is not None
+
+        context = {"camara": camara, "has_roi_p": has_roi_p}
+        return render(request, 'detallesCamara.html', context)
+    except Camara.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No se encontró la cámara solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
 
 #Error para completar la edicion, se supone que hay que enviar el id_camara pero en el tutorial no lo hacen de esa forma
 def edicionCamara(request):
