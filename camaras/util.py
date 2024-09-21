@@ -31,11 +31,13 @@ def get_video_info(video_path):
     # Obtener los FPS
     fps = cap.get(cv2.CAP_PROP_FPS)
 
+    frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
     # Liberar el recurso del video
     cap.release()
 
     # Retornar la información
-    return frame_width, frame_height, fps
+    return frame_width, frame_height, fps, frame_count
 
 
 def get_frame_from_video (video_path):

@@ -18,6 +18,7 @@ class Camara(models.Model):
     url_camara = models.CharField(max_length=255)
     estado_camara = models.CharField(max_length=25)
     frame_rate = models.CharField(max_length=25)
+    frame_count = models.IntegerField()
     id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)

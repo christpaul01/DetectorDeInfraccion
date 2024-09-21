@@ -64,6 +64,7 @@ def registarCamara(request):
         width = video_info[0]
         height = video_info[1]
         fps = video_info[2]
+        frame_count_video = video_info[3]
 
         # put resolution in a string
         resolucionCamara = str(width) + "x" + str(height)
@@ -74,7 +75,7 @@ def registarCamara(request):
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
 
-    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara)
+    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara, frame_count=frame_count_video)
 
     # get created Camara id
 
