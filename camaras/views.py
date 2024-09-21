@@ -82,7 +82,8 @@ def registarCamara(request):
     if video_info is not None:
         Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path,
                               estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara,
-                              frame_count=frame_count_video, video_length=video_length)
+                              fecha_creacion = datetime.now(),frame_count=frame_count_video,
+                              video_length=video_length)
     else:
         error_type = "Error de procesamiento"
         error_message = "No se pudo obtener las informaciones del video."
