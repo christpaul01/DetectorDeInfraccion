@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
+
 from .models import Camara, Direccion, ROI
 from django.db.models import Max, DateField
 from tkinter import filedialog
@@ -37,6 +40,11 @@ def home(request):
 
 # Bloque Camaras
 
+def nuevaCamara(request):
+    next_id = get_next_camera_id()
+    context = {"next_id": next_id}
+    return render(request, 'nuevaCamara.html', context)
+
 def registarCamara(request):
     idCamara = get_next_camera_id()
     nombre = request.POST['nombreCamara']
@@ -48,6 +56,9 @@ def registarCamara(request):
     #resolucionCamara = request.POST['resolucionCamara']
 
     url_video_path = filedialog.askopenfilename()
+
+    video_info = None
+
     try:
         # obtaining video information
         # TODO: Validate if the file is a valid video file
@@ -56,6 +67,8 @@ def registarCamara(request):
         width = video_info[0]
         height = video_info[1]
         fps = video_info[2]
+        frame_count_video = video_info[3]
+        video_length = video_info[4]
 
         # put resolution in a string
         resolucionCamara = str(width) + "x" + str(height)
@@ -66,14 +79,23 @@ def registarCamara(request):
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
 
-    Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path, estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara)
+    if video_info is not None:
+        Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path,
+                              estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara,
+                              fecha_creacion = datetime.now(),frame_count=frame_count_video,
+                              video_length=video_length)
+    else:
+        error_type = "Error de procesamiento"
+        error_message = "No se pudo obtener las informaciones del video."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
 
     # get created Camara id
 
     camaraInstance = Camara.objects.get(id_camara=idCamara)
 
     if isROINormalSelected:
-        fechaCreacion = DateField(auto_now_add=True)
+        fechaCreacion = datetime.now()
         print("ROI Normal seleccionado")
         coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Normal")
         print ("Coordenadas Normal`: ", coordenadas_n)
@@ -81,7 +103,7 @@ def registarCamara(request):
         ROI.objects.create(id_camara=camaraInstance, coordenadas=coordenadas_n, estado_roi='A', tipo_roi='N', fecha_creacion=fechaCreacion)
 
     if isROIProhibidoSelected:
-        fechaCreacion = DateField(auto_now_add=True)
+        fechaCreacion = datetime.now()
         print("ROI Prohibido seleccionado")
         coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Prohibido")
         ROI.objects.create(id_camara=camaraInstance, coordenadas= coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fechaCreacion)
@@ -92,7 +114,11 @@ def registarCamara(request):
 def editarCamara(request,id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
-        return render(request, 'editarCamara.html', {"camara": camara})
+        has_roi_n = ROI.objects.filter(id_camara=id_camara, tipo_roi='N').exists()
+        has_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').exists()
+        context = {"camara": camara, "has_roi_n": has_roi_n, "has_roi_p": has_roi_p}
+
+        return render(request, 'editarCamara.html', context)
     except Camara.DoesNotExist:
         error_type = "Error de procesamiento"
         error_message = "No se encontró la cámara solicitada."
@@ -101,12 +127,29 @@ def editarCamara(request,id_camara):
         return render(request, 'error.html', context)
 
 
+def detallesCamara(request, id_camara):
+    try:
+        camara = Camara.objects.get(id_camara=id_camara)
+        roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').first()
+        has_roi_p = roi_p is not None
+
+        context = {"camara": camara, "has_roi_p": has_roi_p}
+        return render(request, 'detallesCamara.html', context)
+    except Camara.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No se encontró la cámara solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
 #Error para completar la edicion, se supone que hay que enviar el id_camara pero en el tutorial no lo hacen de esa forma
 def edicionCamara(request):
     idCamara = request.POST['idCamara']
     nombre = request.POST['nombreCamara']
     estado = request.POST['estadoCamara']
-    #resolucionCamara = request.POST['resolucionCamara']
+
+    isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
+    is_roi_edit = request.POST.get('editarROI') == 'Si'
+    video_path = Camara.objects.get(id_camara=idCamara).url_camara
 
     try :
         camara = Camara.objects.get(id_camara=idCamara)
@@ -114,6 +157,46 @@ def edicionCamara(request):
         camara.nombre_camara = nombre
         camara.estado_camara = estado
         camara.save()
+
+        try:
+            roi_n = ROI.objects.get(id_camara=idCamara, tipo_roi='N')
+        except ROI.DoesNotExist:
+            roi_n = None
+
+        if roi_n:
+            if is_roi_edit:
+                coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Normal")
+                roi_n.coordenadas = coordenadas_n
+                roi_n.fecha_creacion = datetime.now()
+                roi_n.save()
+        else:
+            coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Normal")
+            fecha_creacion = DateField(auto_now_add=True)
+            ROI.objects.create(id_camara=camara, coordenadas=coordenadas_n, estado_roi='A', tipo_roi='N', fecha_creacion=fecha_creacion)
+
+
+        try:
+            roi_p = ROI.objects.get(id_camara=idCamara, tipo_roi='P')
+        except ROI.DoesNotExist:
+            roi_p = None
+
+        if roi_p:
+            if is_roi_edit:
+                if isROIProhibidoSelected:
+                    coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
+                    roi_p.coordenadas = coordenadas_p
+                    roi_p.fecha_creacion = datetime.now()
+                    roi_p.save()
+            else:
+                if not isROIProhibidoSelected:
+                    # TODO: Modificar el estado del ROI a inactivo
+                    roi_p.delete()
+        else:
+            if isROIProhibidoSelected:
+                coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
+                fecha_creacion = DateField(auto_now_add=True)
+                ROI.objects.create(id_camara=camara, coordenadas=coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fecha_creacion)
+
         return redirect('/')
     except Camara.DoesNotExist:
         error_type = "Error de procesamiento"

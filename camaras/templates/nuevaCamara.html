@@ -1,12 +1,10 @@
-
 {% extends "./BaseCamaras.html" %}
  <p>Aqui podras configurar las camaras del sistema</p>
  <a href="http://localhost:8000/camaras">Configurar Camaras</a>
 
 {% block body %}
- <div class="row">
-      <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
-          <h1> Gestión de Camaras</h1>
+
+<h1> Gestión de Camaras</h1>
           <div class="card">
               <div class="card-body" >
                   <form action="/registrarCamara/" method="POST"> {%csrf_token%}
@@ -46,37 +44,6 @@
                   </form>
               </div>
           </div>
-      </div>
-      <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
-          <h1>Config de Camaras</h1>
-        <div class="table-responsive py-2">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-{#                  <th>#</th>#}
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Estado</th>
-                  <th>Resolución</th>
-                  <th colspan="4">Opciones</th>
-                </tr>
-             </thead>
-             <tbody>
-                 {% for c in camaras %}
-                 <tr>
-                       <td>{{c.id_camara}}</td>
-                       <td>{{c.nombre_camara}}</td>
-                       <td>{{c.estado_camara}}</td>
-                       <td>{{c.resolucion_camara}}</td>
-                        <td><a href="detallesCamara/{{c.id_camara}}" class="btn btn-primary">Ver</a> </td>
-                       <td><a href="editarCamara/{{c.id_camara}}" class="btn btn-info">Editar</a> </td>
-                       <td><a href="eliminarCamara/{{c.id_camara}}" class="btn btn-danger btnEliminacion">Eliminar</a> </td>
-                        <td><a href="iniciarCamara/{{c.id_camara}}" class="btn btn-success btnIniciar">Iniciar</a> </td>
-                 </tr>
-                 {%  endfor %}
-             </tbody>
-          </table>
-        </div>
-      </div>
- </div>
+
+
 {% endblock %}

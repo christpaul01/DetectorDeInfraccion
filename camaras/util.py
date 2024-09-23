@@ -1,9 +1,22 @@
 import cv2
 
 import numpy as np
+import datetime
 import os
 import tkinter as tk
 from tkinter import filedialog
+
+def get_time_from_seconds(seconds):
+    """
+    Convierte una cantidad de segundos a una cadena de texto en formato HH:MM:SS.
+
+    Args:
+        seconds (int): La cantidad de segundos.
+
+    Returns:
+        str: Una cadena de texto en formato HH:MM:SS.
+    """
+    return str(datetime.timedelta(seconds=seconds))
 
 
 def get_video_info(video_path):
@@ -31,11 +44,19 @@ def get_video_info(video_path):
     # Obtener los FPS
     fps = cap.get(cv2.CAP_PROP_FPS)
 
+    frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    if fps == 0:
+        print("Error: No se pudo obtener los FPS del video.")
+        video_length = 0
+    else:
+        video_length = frame_count / fps
+
     # Liberar el recurso del video
     cap.release()
 
     # Retornar la información
-    return frame_width, frame_height, fps
+    return frame_width, frame_height, fps, frame_count, video_length
 
 
 def get_frame_from_video (video_path):
