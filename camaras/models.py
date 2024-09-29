@@ -44,7 +44,7 @@ class ROI(models.Model):
     estado_roi = models.CharField(max_length=1, choices=ESTADO_ROI_CHOICES, default='A')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     tipo_roi = models.CharField(max_length=1, choices=TIPO_ROI_CHOICES, default='N')
-    coordenadas = models.CharField(max_length=50, blank= False, null= False)
+    coordenadas = models.CharField(max_length=100, blank= False, null= False)
     flujo_vehicular = models.IntegerField(null=True, blank=True)
     condicion_roi = models.CharField(max_length=255, blank=True, null=True)
     notas = models.TextField(blank=True, null=True)
