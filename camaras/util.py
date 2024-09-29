@@ -1,10 +1,33 @@
-import cv2
-
-import numpy as np
 import datetime
+
 import os
 import tkinter as tk
 from tkinter import filedialog
+
+# import for yolo model
+from ultralytics import YOLO
+import cv2
+import numpy as np
+import time
+import torch
+
+from .models import Camara, Direccion, ROI
+
+
+def get_camaras():
+    """
+    Obtiene todas las cámaras de la base de datos.
+
+    Returns:
+        QuerySet: Un QuerySet con todas las cámaras.
+    """
+    return Camara.objects.all()
+
+def start_detection(camara):
+    nombre = camara.nombre_camara
+    url = camara.url_camara
+
+    print(f"Starting detection from camera: {nombre}, url: {url}")
 
 def get_time_from_seconds(seconds):
     """
