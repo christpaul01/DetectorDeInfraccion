@@ -130,8 +130,7 @@ def editarCamara(request,id_camara):
 def detallesCamara(request, id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
-        roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').first()
-        has_roi_p = roi_p is not None
+        has_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').first() is not None
 
         context = {"camara": camara, "has_roi_p": has_roi_p}
         return render(request, 'detallesCamara.html', context)
