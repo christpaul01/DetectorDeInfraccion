@@ -27,7 +27,78 @@ def start_detection(camara):
     nombre = camara.nombre_camara
     url = camara.url_camara
 
+    # Carga de modelos
+    yolov8s_model_path = "../modelos/yolov8s.pt"
+    LP_model_path = "../modelos/matriculas.pt"
+    helmet_model_path = "../modelos/cascos.pt"
+
+    # Vehicles = Car, motorcycle, bus, truck
+    vehicles = [2, 3, 5, 7]
+    # Helmets = With Helmet, Without helmet
+    helmets = [0, 1]
+
+    if torch.cuda.is_available():
+        # CUDA GPU available
+        print("CUDA enabled")
+        torch.cuda.set_device(0)
+    else:
+        print("Running on CPU")
+
     print(f"Starting detection from camera: {nombre}, url: {url}")
+    # TODO: Usar solamente para evaluacion de codigo
+    # watch_video_from_frame(url, 0, 100)
+
+
+def watch_video_from_frame(video_path, start_frame, end_frame):
+    # Load the video
+    cap = cv2.VideoCapture(video_path)
+
+    # Check if the video is opened successfully
+    if not cap.isOpened():
+        print("Error opening video file")
+        return
+
+    # Get total number of frames in the video
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Ensure end_frame does not exceed the total number of frames
+    end_frame = min(end_frame, total_frames - 1)
+
+    # Create a single window for the video playback
+    cv2.namedWindow("Video Playback", cv2.WINDOW_NORMAL)
+
+    # Start a loop to continuously play the video from start_frame to end_frame
+    while True:
+        # Set the video to start from the start_frame
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+        # Read and display frames from start_frame to end_frame
+        current_frame = start_frame
+        while current_frame <= end_frame:
+            ret, frame = cap.read()
+
+            if not ret:
+                print("Error reading frame. Rewinding to start.")
+                break  # Break the loop if there's an error reading the frame
+
+            # Display the current frame in the same window
+            cv2.imshow("Video Playback", frame)
+
+            # Wait for a short period between frames (25 ms) to mimic normal video playback speed
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                cap.release()
+                cv2.destroyAllWindows()
+                return  # Exit if 'q' is pressed
+
+            # Move to the next frame
+            current_frame += 1
+
+        # Once end_frame is reached, the loop continues, resetting to start_frame
+
+    # Release the video capture object and close all windows
+    cap.release()
+    cv2.destroyAllWindows()
+
 
 def get_time_from_seconds(seconds):
     """
