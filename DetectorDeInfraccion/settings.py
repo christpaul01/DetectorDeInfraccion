@@ -79,10 +79,17 @@ WSGI_APPLICATION = 'DetectorDeInfraccion.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'detectApp.db',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'detectAppSQL',
+        'USER': 'django_user',
+        'PASSWORD': 'django_password',
+        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
+
     }
 }
+
+
 
 
 # Password validation
