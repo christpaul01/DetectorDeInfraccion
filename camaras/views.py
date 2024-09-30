@@ -116,7 +116,7 @@ def registarCamara(request):
 
 def start_camara(request, id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
-    utilidades.start_detection(camara)
+    utilidades.start_detection(camara.id_camara)
     return redirect('/')
 
 def editarCamara(request,id_camara):
