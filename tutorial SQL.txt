@@ -1,0 +1,15 @@
+
+pip install mysqlclient
+
+mysql -u root -p
+CREATE DATABASE detectAppSQL;
+GRANT ALL PRIVILEGES ON detectAppSQL.* TO 'django_user'@'localhost' IDENTIFIED BY 'django_password';
+FLUSH PRIVILEGES;
+EXIT;
+
+
+python manage.py dumpdata > data.json
+python manage.py migrate
+python manage.py loaddata data.json
+python manage.py runserver
+

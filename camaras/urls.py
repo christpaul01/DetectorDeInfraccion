@@ -6,7 +6,7 @@ urlpatterns = [
     path('', views.home),
     # Bloque Camaras
     path('camaras/', views.camaras, name='camaras'),
-
+    path('iniciarCamara/<id_camara>', views.start_camara),
     path('nuevaCamara/', views.nuevaCamara),
     path('registrarCamara/', views.registarCamara),
     path('editarCamara/<id_camara>', views.editarCamara),

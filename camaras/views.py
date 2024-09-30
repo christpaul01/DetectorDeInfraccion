@@ -11,6 +11,7 @@ import cv2
 from . import util as utilidades
 
 
+
 def get_next_camera_id():
     """
     Returns the next available ID for a new camera.
@@ -32,7 +33,8 @@ def get_next_direccion_id():
         return 1
 
 def home(request):
-    camaras = Camara.objects.all()
+    camaras = utilidades.get_camaras()
+    #camaras = Camara.objects.all()
     next_id = get_next_camera_id()
     context = {"camaras": camaras, "next_id": next_id}
     return render(request, "configCamaras.html", context)
@@ -109,6 +111,12 @@ def registarCamara(request):
         ROI.objects.create(id_camara=camaraInstance, coordenadas= coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fechaCreacion)
 
 
+    return redirect('/')
+
+
+def start_camara(request, id_camara):
+    camara = Camara.objects.get(id_camara=id_camara)
+    utilidades.start_detection(camara.id_camara)
     return redirect('/')
 
 def editarCamara(request,id_camara):
