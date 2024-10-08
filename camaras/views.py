@@ -1,15 +1,15 @@
 from datetime import datetime
 
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.template import loader
+
 
 from .models import Camara, Direccion, ROI
 from django.db.models import Max, DateField
 from tkinter import filedialog
 import cv2
 from . import util as utilidades
-
 
 
 def get_next_camera_id():
@@ -113,6 +113,18 @@ def registarCamara(request):
 
     return redirect('/')
 
+
+def stream_video(request, id_camara):
+    camara = Camara.objects.get(id_camara=id_camara)
+    video_path = camara.url_camara
+    # TODO: Get the start and end frame from the request
+    start_frame = 0
+    end_frame = 100
+
+    # Call the modified function to stream frames
+    response = StreamingHttpResponse(utilidades.video_to_html(video_path, start_frame, end_frame),
+                                     content_type='multipart/x-mixed-replace; boundary=frame')
+    return response
 
 def start_camara(request, id_camara):
     camara = Camara.objects.get(id_camara=id_camara)

@@ -21,5 +21,9 @@ urlpatterns = [
 
     path('listarDirecciones/', views.listarDirecciones),
 
-    path('registrarDireccion/', views.registrarDireccion)
+    path('registrarDireccion/', views.registrarDireccion),
+
+    path('stream/<id_camara>', views.stream_video, name='stream_video')
+
+
 ]

@@ -77,6 +77,11 @@ class Matricula:
     matricula = models.CharField(max_length=255)
     imagen_matricula = models.ImageField(upload_to='matriculas')
 
+class Video(models.Model):
+    id_video = models.AutoField(primary_key=True)
+    id_camara = models.ForeignKey('Camara', on_delete=models.CASCADE)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    video = models.FileField(upload_to='videos')
 
 
 def __str__(self):

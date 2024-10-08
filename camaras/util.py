@@ -13,6 +13,9 @@ import time
 import torch
 import ast
 
+# For Streaming Video
+from django.http import StreamingHttpResponse
+
 from .models import Camara, Direccion, ROI
 
 
@@ -24,6 +27,7 @@ def get_camaras():
         QuerySet: Un QuerySet con todas las cámaras.
     """
     return Camara.objects.all()
+
 
 def is_inside_trapezoid(box, roi_vertices):
     # box is an object bounding box as (x, y, w, h)
@@ -57,7 +61,7 @@ def start_detection(id_camara):
 
     # Construct the absolute path to the model file
     LP_model_path = os.path.join(script_dir, './modelos/matriculas.pt')
-    helmet_model_path = os.path.join(script_dir, './modelos/cascos.pt')
+    helmet_model_path = os.path.join(script_dir, './modelos/best.pt')
 
     # Check if the file exists
     if not os.path.exists(LP_model_path):
@@ -70,10 +74,6 @@ def start_detection(id_camara):
     else:
         print(f"Archivo encontrado: {helmet_model_path}")
 
-    #LP_model_path = "~/Documents/GitHub/DetectorDeInfraccion/camaras/modelos/matriculas.pt"
-    #LP_model_path =  os.path.join('.', 'modelos', 'matriculas.pt')
-    #helmet_model_path = "~/Documents/GitHub/DetectorDeInfraccion/camaras/modelos/cascos.pt"
-    #helmet_model_path = os.path.join('.', 'modelos', 'cascos.pt')
 
     model = YOLO('yolov8n.pt')
     custom_LP_Model = YOLO(LP_model_path)
@@ -83,7 +83,7 @@ def start_detection(id_camara):
     # Thresholds
     thresholdVehicle = 0.5
     thresholdLicensePlate = 0.4
-    thresholdHelmet = 0.4
+    thresholdHelmet = 0.7
 
     # Vehicles = Car, motorcycle, bus, truck
     vehicles = [2, 3, 5, 7]
@@ -156,7 +156,7 @@ def start_detection(id_camara):
         if success:
 
             # Run YOLOv8 tracking on the frame, persisting tracks between frames
-            results = model.track(frame, persist=True, classes=vehicles)
+            results = model.track(frame, persist=True, classes=vehicles, tracker="bytetrack.yaml")
 
             if results[0].boxes.id is not None:
                 # Get the boxes and track IDs
@@ -209,6 +209,7 @@ def start_detection(id_camara):
                     points = np.hstack(track).astype(np.int32).reshape((-1, 1, 2))
                     cv2.polylines(annotated_frame, [points], isClosed=False, color=(230, 230, 230), thickness=5)
 
+                # TODO: Only check for vehicles crossing if the prohibited ROI is defined
                 # Check for vehicles crossing from roi_vertices to p_roi_vertices
                 for prev_box, prev_id, box, track_id in zip(prev_boxes, prev_track_ids, boxes, track_ids):
                     prev_x, prev_y, prev_w, prev_h = prev_box
@@ -246,6 +247,48 @@ def start_detection(id_camara):
     # Release the video capture object and close the display window
     cap.release()
     cv2.destroyAllWindows()
+
+
+def video_to_html(video_path, start_frame, end_frame):
+    # Load the video
+    cap = cv2.VideoCapture(video_path)
+
+    # Check if the video is opened successfully
+    if not cap.isOpened():
+        raise ValueError("Error opening video file")
+
+    # Get total number of frames in the video
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # Ensure end_frame does not exceed the total number of frames
+    end_frame = min(end_frame, total_frames - 1)
+
+    # Set the video to start from the start_frame
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+    # Start reading frames and yield them one by one
+    current_frame = start_frame
+
+    while current_frame <= end_frame:
+        ret, frame = cap.read()
+
+        if not ret:
+            break  # Stop if there's an error reading the frame
+
+        # Encode the frame to JPEG
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame_bytes = buffer.tobytes()
+
+        # Yield the frame as part of an HTTP response, simulating streaming
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+        # Mimic video playback speed (25 ms between frames)
+        time.sleep(0.025)
+
+        current_frame += 1
+
+    cap.release()
 
 
 def watch_video_from_frame(video_path, start_frame, end_frame):
