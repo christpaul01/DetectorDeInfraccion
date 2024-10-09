@@ -2,7 +2,9 @@
 
 {% block body %}
 <body>
-    <h1>Video Stream</h1>
-    <img src="{% url 'stream_video' %}" alt="Video Stream">
+    <h1 class="text-center mb-4">Video Stream for {{ camara.nombre_camara }}</h1>
+    <div class="text-center">
+        <img src="{{ video_url }}" alt="Video Stream" class="img-fluid" style="max-width: 100%; height: auto;">
+    </div>
 </body>
 {% endblock %}
