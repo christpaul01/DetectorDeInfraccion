@@ -12,6 +12,7 @@ import numpy as np
 import time
 import torch
 import ast
+import base64
 
 # For Streaming Video
 from django.http import StreamingHttpResponse
@@ -283,6 +284,7 @@ def video_to_html(video_path, start_frame, end_frame):
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
+        # TODO: modify the sleep time to adjust the video playback speed
         # Mimic video playback speed (25 ms between frames)
         time.sleep(0.025)
 
@@ -421,15 +423,20 @@ def get_time_from_seconds(seconds):
     return str(datetime.timedelta(seconds=seconds))
 
 
-def get_video_info(video_path):
+import cv2
+import numpy as np
+
+def get_video_info(video_path, resize_factor=0.25):
     """
-    Obtiene la resolución (ancho y alto) y los FPS de un archivo de video.
+    Obtiene la resolución (ancho y alto), los FPS y una vista previa del primer fotograma de un archivo de video,
+    redimensionando el fotograma para que sea más pequeño.
 
     Args:
         video_path (str): La ruta del archivo de video.
+        resize_factor (float): Factor de redimensionamiento para reducir el tamaño del fotograma.
 
     Returns:
-        tuple: Una tupla que contiene (ancho, alto, fps) o None si no se puede abrir el video.
+        tuple: Una tupla que contiene (ancho, alto, fps, frame_count, video_length, first_frame) o None si no se puede abrir el video.
     """
     # Abre el archivo de video
     cap = cv2.VideoCapture(video_path)
@@ -454,11 +461,36 @@ def get_video_info(video_path):
     else:
         video_length = frame_count / fps
 
+    # Leer el primer fotograma
+    ret, first_frame = cap.read()
+    if not ret:
+        print("Error: No se pudo leer el primer fotograma.")
+        first_frame = None
+    else:
+        # Redimensionar el fotograma
+        new_width = int(frame_width * resize_factor)
+        new_height = int(frame_height * resize_factor)
+        first_frame = cv2.resize(first_frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
     # Liberar el recurso del video
     cap.release()
 
     # Retornar la información
-    return frame_width, frame_height, fps, frame_count, video_length
+    return frame_width, frame_height, fps, frame_count, video_length, first_frame
+
+def frame_to_base64(frame):
+    # Encode the frame as a JPEG image
+    _, buffer = cv2.imencode('.jpg', frame)
+    # Convert the buffer to a Base64 string
+    return base64.b64encode(buffer).decode('utf-8')
+
+def save_first_frame(camara_instance, first_frame):
+    # Convert the first frame to Base64
+    base64_frame = frame_to_base64(first_frame)
+
+    # Save the Base64 string to the Camara instance
+    camara_instance.first_frame_base64 = base64_frame
+    camara_instance.save()
 
 
 def get_frame_from_video (video_path):

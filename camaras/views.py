@@ -71,6 +71,7 @@ def registarCamara(request):
         fps = video_info[2]
         frame_count_video = video_info[3]
         video_length = video_info[4]
+        first_frame = video_info[5]
 
         # put resolution in a string
         resolucionCamara = str(width) + "x" + str(height)
@@ -82,10 +83,11 @@ def registarCamara(request):
         return render(request, 'error.html', context)
 
     if video_info is not None:
+        first_frame_64 = utilidades.frame_to_base64(first_frame)
         Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path,
                               estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara,
                               fecha_creacion = datetime.now(),frame_count=frame_count_video,
-                              video_length=video_length)
+                              video_length=video_length, first_frame_base64=first_frame_64)
     else:
         error_type = "Error de procesamiento"
         error_message = "No se pudo obtener las informaciones del video."
@@ -115,6 +117,8 @@ def registarCamara(request):
 
 
 def stream_video(request, id_camara):
+    # NOTE: For testing purposes, the original video is streamed
+    # TODO: Modify this function to stream infraccion videos instead of the original video
     camara = Camara.objects.get(id_camara=id_camara)
     video_path = camara.url_camara
     # TODO: Get the start and end frame from the request

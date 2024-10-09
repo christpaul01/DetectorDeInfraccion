@@ -26,6 +26,7 @@ class Camara(models.Model):
     id_direccion_camara = models.ForeignKey('Direccion', on_delete=models.CASCADE, blank=True, null=True)
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)
+    first_frame_base64 = models.TextField(blank=True, null=True)
 
 
 
@@ -58,7 +59,11 @@ class Infraccion(models.Model):
     velocidad_estimada = models.FloatField()
     tipo_infraccion = models.ForeignKey('TipoInfraccion', on_delete=models.CASCADE)
     id_videoinfraccion = models.CharField(max_length=255)
-    frame_infraccion = models.CharField(max_length=255)
+    frame_inicio = models.CharField(max_length=25)
+    frame_final = models.CharField(max_length=25)
+    estado_infraccion = models.CharField(max_length=25)
+    revision_infraccion = models.CharField(max_length=25)
+    notas = models.CharField(max_length=255)
 
 class TipoVehiculo(models.Model):
     id_tipo_vehiculo = models.AutoField(primary_key=True)
