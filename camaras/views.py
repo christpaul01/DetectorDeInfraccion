@@ -119,8 +119,16 @@ def registarCamara(request):
 def stream_video(request, id_camara):
     # NOTE: For testing purposes, the original video is streamed
     # TODO: Modify this function to stream infraccion videos instead of the original video
-    camara = Camara.objects.get(id_camara=id_camara)
-    video_path = camara.url_camara
+    try:
+        camara = Camara.objects.get(id_camara=id_camara)
+        video_path = camara.url_camara
+    except Camara.DoesNotExist:
+        print("No se encontró la cámara solicitada.")
+        error_type = "Error de procesamiento"
+        error_message = "No se encontró la cámara solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
     # TODO: Get the start and end frame from the request
     start_frame = 0
     end_frame = 100
