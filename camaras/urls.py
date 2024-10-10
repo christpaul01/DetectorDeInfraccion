@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     # Bloque Home
-    path('', views.home),
+    path('', views.home, name='home'),
     # Bloque Camaras
     path('camaras/', views.camaras, name='camaras'),
     path('iniciarCamara/<id_camara>', views.start_camara),
