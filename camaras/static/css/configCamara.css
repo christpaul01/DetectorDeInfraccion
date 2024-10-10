@@ -1,5 +1,45 @@
-th,
-td {
-  text-align: center;
-  vertical-align: middle;
-}
+/* Global padding and margin reset */
+        body {
+           margin: 0;
+        }
+
+        /* Make legends smaller */
+        legend {
+            font-size: 0.9rem; /* Smaller font size for legend */
+            font-weight: bold;
+            padding-bottom: 5px; /* Adds spacing below the legend */
+        }
+
+        /* General form padding and margin */
+        .form-group {
+            margin-bottom: 20px; /* Adds space between form elements */
+        }
+
+        /* Card padding */
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Table styling */
+        .table-responsive {
+            padding-top: 10px;
+        }
+
+        /* Button styling */
+        .btn {
+            margin-right: 5px;
+        }
+
+        table {
+            font-size: 0.8rem; /* Smaller font size for table content */
+        }
+
+        /* General container spacing */
+        .container {
+            padding: 20px;
+        }
+
+        /* Header margin adjustments */
+        h1 {
+            margin-bottom: 20px;
+        }

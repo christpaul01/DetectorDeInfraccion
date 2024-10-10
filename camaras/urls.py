@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     # Bloque Home
-    path('', views.home),
+    path('', views.home, name='home'),
     # Bloque Camaras
     path('camaras/', views.camaras, name='camaras'),
     path('iniciarCamara/<id_camara>', views.start_camara),
@@ -27,4 +27,12 @@ urlpatterns = [
     path('stream/<int:id_camara>/', views.stream_video, name='stream_video'),
     path('stream/<int:id_camara>/video/', views.stream_video_content, name='stream_video_content'),
 
+    # login path
+    path('login/', views.loginpage, name='login'),
+
+    # logout path
+    path('logout/', views.logoutpage, name='logout'),
+
+    # register path
+    path('register/', views.registerpage, name='register'),
 ]

@@ -250,47 +250,61 @@ def start_detection(id_camara):
     cv2.destroyAllWindows()
 
 
-def video_to_html(video_path, start_frame, end_frame):
-    # Load the video
-    cap = cv2.VideoCapture(video_path)
+def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
+    try:
+        # Load the video
+        cap = cv2.VideoCapture(video_path)
 
-    # Check if the video is opened successfully
-    if not cap.isOpened():
-        raise ValueError("Error opening video file")
+        # Check if the video is opened successfully
+        if not cap.isOpened():
+            raise ValueError(f"Error opening video file: {video_path}")
 
-    # Get total number of frames in the video
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        # Get total number of frames and FPS in the video
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
 
-    # Ensure end_frame does not exceed the total number of frames
-    end_frame = min(end_frame, total_frames - 1)
+        # Ensure end_frame does not exceed the total number of frames
+        end_frame = min(end_frame, total_frames - 1)
 
-    # Set the video to start from the start_frame
-    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        # Set the video to start from the start_frame
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 
-    # Start reading frames and yield them one by one
-    current_frame = start_frame
+        # Default playback speed is based on the video's FPS
+        if playback_speed is None:
+            playback_speed = 1 / fps
 
-    while current_frame <= end_frame:
-        ret, frame = cap.read()
+        current_frame = start_frame
 
-        if not ret:
-            break  # Stop if there's an error reading the frame
+        while current_frame <= end_frame:
+            ret, frame = cap.read()
 
-        # Encode the frame to JPEG
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame_bytes = buffer.tobytes()
+            if not ret:
+                print(f"Error reading frame {current_frame}")
+                break
 
-        # Yield the frame as part of an HTTP response, simulating streaming
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            # Encode the frame to JPEG
+            ret, buffer = cv2.imencode('.jpg', frame)
+            if not ret:
+                print(f"Error encoding frame {current_frame}")
+                continue
 
-        # TODO: modify the sleep time to adjust the video playback speed
-        # Mimic video playback speed (25 ms between frames)
-        time.sleep(0.025)
+            frame_bytes = buffer.tobytes()
 
-        current_frame += 1
+            # Yield the frame as part of an HTTP response, simulating streaming
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-    cap.release()
+            # Mimic video playback speed
+            time.sleep(playback_speed)
+
+            current_frame += 1
+
+    except Exception as e:
+        print(f"Exception occurred: {e}")
+
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 def watch_video_from_frame(video_path, start_frame, end_frame):

@@ -11,6 +11,12 @@ from tkinter import filedialog
 import cv2
 from . import util as utilidades
 
+# login imports
+
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+
 
 def get_next_camera_id():
     """
@@ -316,3 +322,44 @@ def registrarDireccion(request):
 
     Direccion.objects.create(id_direccion=idDireccion, nombre_direccion=nombreDireccion, municipio=municipio, ciudad=ciudad, pais=pais, detalles=detalles)
     return redirect('/direcciones/')
+
+
+def loginpage(request):
+    if request.method == 'GET':
+        return render(request, 'login.html')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request, user)
+            messages.success(request, f'You are logged in as {user.username}')
+            return redirect('/')
+        else:
+            messages.error(request, 'The combination of the user name and the password is wrong!')
+            return redirect('login')
+
+def registerpage(request):
+    if request.method == 'GET':
+        return render(request, 'register.html')
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=password)
+            login(request, user)
+            messages.success(request,
+                             f'You have registered your account successfully! Logged in as {user.username}')
+            return redirect('/')
+        else:
+            messages.error(request, form.errors)
+            return redirect('register')
+
+
+def logoutpage(request):
+    logout(request)
+    messages.success(request, f'You have been logged out!')
+    return redirect('/')
