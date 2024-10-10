@@ -15,6 +15,8 @@ from . import util as utilidades
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 
 
@@ -47,12 +49,13 @@ def home(request):
 
 
 # Bloque Camaras
-
+@login_required
 def nuevaCamara(request):
     next_id = get_next_camera_id()
     context = {"next_id": next_id}
     return render(request, 'nuevaCamara.html', context)
 
+@login_required
 def registarCamara(request):
     idCamara = get_next_camera_id()
     nombre = request.POST['nombreCamara']
