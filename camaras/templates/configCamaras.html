@@ -69,9 +69,10 @@
                        <td>{{c.estado_camara}}</td>
                        <td>{{c.resolucion_camara}}</td>
                         <td><a href="detallesCamara/{{c.id_camara}}" class="btn btn-primary">Ver</a> </td>
-                       <td><a href="editarCamara/{{c.id_camara}}" class="btn btn-info">Editar</a> </td>
+{#                       <td><a href="editarCamara/{{c.id_camara}}" class="btn btn-info">Editar</a> </td>#}
                        <td><a href="eliminarCamara/{{c.id_camara}}" class="btn btn-danger btnEliminacion">Eliminar</a> </td>
-                        <td><a href="iniciarCamara/{{c.id_camara}}" class="btn btn-success btnIniciar">Iniciar</a> </td>
+                     <td><a href="stream/{{c.id_camara}}" class="btn btn-info">Stream</a> </td>
+                     <td><a href="iniciarCamara/{{c.id_camara}}" class="btn btn-success btnIniciar">Iniciar</a> </td>
                  </tr>
                  {%  endfor %}
              </tbody>

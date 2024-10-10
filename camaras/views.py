@@ -1,15 +1,15 @@
 from datetime import datetime
 
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, StreamingHttpResponse
 from django.template import loader
+
 
 from .models import Camara, Direccion, ROI
 from django.db.models import Max, DateField
 from tkinter import filedialog
 import cv2
 from . import util as utilidades
-
 
 
 def get_next_camera_id():
@@ -71,6 +71,7 @@ def registarCamara(request):
         fps = video_info[2]
         frame_count_video = video_info[3]
         video_length = video_info[4]
+        first_frame = video_info[5]
 
         # put resolution in a string
         resolucionCamara = str(width) + "x" + str(height)
@@ -82,10 +83,11 @@ def registarCamara(request):
         return render(request, 'error.html', context)
 
     if video_info is not None:
+        first_frame_64 = utilidades.frame_to_base64(first_frame)
         Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path,
                               estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara,
                               fecha_creacion = datetime.now(),frame_count=frame_count_video,
-                              video_length=video_length)
+                              video_length=video_length, first_frame_base64=first_frame_64)
     else:
         error_type = "Error de procesamiento"
         error_message = "No se pudo obtener las informaciones del video."
@@ -113,6 +115,57 @@ def registarCamara(request):
 
     return redirect('/')
 
+
+def stream_video(request, id_camara):
+    # Attempt to get the camera object
+    camara = get_object_or_404(Camara, id_camara=id_camara)
+    video_path = camara.url_camara
+
+    # Prepare context for the template
+    context = {
+        'camara': camara,
+        'video_url': f"/stream/{camara.id_camara}/video/"
+    }
+
+    return render(request, 'stream.html', context)
+
+def stream_video_content(request, id_camara):
+    try:
+        camara = Camara.objects.get(id_camara=id_camara)
+        video_path = camara.url_camara
+    except Camara.DoesNotExist:
+        return StreamingHttpResponse("Video not found", status=404)
+
+    # TODO: Get the start and end frame from the request if needed
+    start_frame = 0
+    end_frame = 500
+
+    # Call the modified function to stream frames
+    response = StreamingHttpResponse(utilidades.video_to_html(video_path, start_frame, end_frame),
+                                     content_type='multipart/x-mixed-replace; boundary=frame')
+    return response
+
+# def stream_video_content(request, id_camara):
+#     # NOTE: For testing purposes, the original video is streamed
+#     # TODO: Modify this function to stream infraccion videos instead of the original video
+#     try:
+#         camara = Camara.objects.get(id_camara=id_camara)
+#         video_path = camara.url_camara
+#     except Camara.DoesNotExist:
+#         print("No se encontró la cámara solicitada.")
+#         error_type = "Error de procesamiento"
+#         error_message = "No se encontró la cámara solicitada."
+#         context = {"error_type": error_type, "error_message": error_message}
+#         return render(request, 'error.html', context)
+#
+#     # TODO: Get the start and end frame from the request
+#     start_frame = 0
+#     end_frame = 100
+#
+#     # Call the modified function to stream frames
+#     response = StreamingHttpResponse(utilidades.video_to_html(video_path, start_frame, end_frame),
+#                                      content_type='multipart/x-mixed-replace; boundary=frame')
+#     return response
 
 def start_camara(request, id_camara):
     camara = Camara.objects.get(id_camara=id_camara)

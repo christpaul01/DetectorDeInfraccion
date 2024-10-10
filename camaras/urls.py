@@ -21,5 +21,10 @@ urlpatterns = [
 
     path('listarDirecciones/', views.listarDirecciones),
 
-    path('registrarDireccion/', views.registrarDireccion)
+    path('registrarDireccion/', views.registrarDireccion),
+
+   # path('stream/<id_camara>', views.stream_video, name='stream_video')
+    path('stream/<int:id_camara>/', views.stream_video, name='stream_video'),
+    path('stream/<int:id_camara>/video/', views.stream_video_content, name='stream_video_content'),
+
 ]

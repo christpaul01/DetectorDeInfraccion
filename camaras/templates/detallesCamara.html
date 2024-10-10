@@ -1,37 +1,50 @@
 {% extends "./BaseCamaras.html" %}
 
 {% block body %}
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <h1>Detalles de la Cámara</h1>
-        <div class="card">
-            <div class="card-header">
-                {{ camara.nombre_camara }}
-            </div>
-            <div class="card-body">
-                <h5 class="card-title">Información General</h5>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>ID:</strong> {{ camara.id_camara }}</li>
-                    <li class="list-group-item"><strong>Nombre:</strong> {{ camara.nombre_camara }}</li>
-                    <li class="list-group-item"><strong>Estado:</strong> {{ camara.estado_camara }}</li>
-                    <li class="list-group-item"><strong>Resolución:</strong> {{ camara.resolucion_camara }}</li>
-                    <li class="list-group-item"><strong>Frame Rate:</strong> {{ camara.frame_rate }}</li>
-                    <li class="list-group-item"><strong>Frame Count:</strong> {{ camara.frame_count }}</li>
-                    <li class="list-group-item"><strong>Longitud del Video:</strong> {{ camara.video_length }} segundos</li>
-                    <li class="list-group-item"><strong>Tiempo de Video:</strong> {{ camara.time_video }}</li>
-                    <li class="list-group-item"><strong>Fecha de Creación:</strong> {{ camara.fecha_creacion|date:"d-m-Y H:i" }}</li>
-                    <li class="list-group-item"><strong>Dirección:</strong>
-                        {% if camara.id_direccion_camara %}
-                            {{ camara.id_direccion_camara.direccion }}
-                        {% else %}
-                            No asignada
-                        {% endif %}
-                    </li>
-                    <li class="list-group-item"><strong>Tiene ROI Prohibida:</strong> {{ has_roi_p }}</li>
-                    <li class="list-group-item"><strong>Notas:</strong> {{ camara.notas }}</li>
-                </ul>
-                <a href="/camaras/editarCamara/{{ camara.id_camara }}" class="btn btn-primary mt-3">Editar Cámara</a>
-                <a href="/camaras/" class="btn btn-secondary mt-3">Volver a la lista</a>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="text-center mb-4">Detalles de la Cámara</h1>
+            <div class="card shadow">
+                <div class="card-header text-white bg-primary">
+                    <h5 class="mb-0 text-center">{{ camara.nombre_camara }}</h5>
+                </div>
+                <div class="card-body d-flex flex-column align-items-center">
+                    <h5 class="card-title text-center">Información General</h5>
+                    <ul class="list-group list-group-flush text-center">
+                        <li class="list-group-item"><strong>ID:</strong> {{ camara.id_camara }}</li>
+                        <li class="list-group-item"><strong>Nombre:</strong> {{ camara.nombre_camara }}</li>
+                        <li class="list-group-item"><strong>Estado:</strong> {{ camara.estado_camara }}</li>
+                        <li class="list-group-item"><strong>Resolución:</strong> {{ camara.resolucion_camara }}</li>
+                        <li class="list-group-item"><strong>Frame Rate:</strong> {{ camara.frame_rate }}</li>
+                        <li class="list-group-item"><strong>Frame Count:</strong> {{ camara.frame_count }}</li>
+                        <li class="list-group-item"><strong>Longitud del Video:</strong> {{ camara.video_length }} segundos</li>
+                        <li class="list-group-item"><strong>Tiempo de Video:</strong> {{ camara.time_video }}</li>
+                        <li class="list-group-item"><strong>Fecha de Creación:</strong> {{ camara.fecha_creacion|date:"d-m-Y H:i" }}</li>
+                        <li class="list-group-item"><strong>Dirección:</strong>
+                            {% if camara.id_direccion_camara %}
+                                {{ camara.id_direccion_camara.direccion }}
+                            {% else %}
+                                No asignada
+                            {% endif %}
+                        </li>
+                        <li class="list-group-item"><strong>Tiene ROI Prohibida:</strong> {{ has_roi_p }}</li>
+                        <li class="list-group-item"><strong>Notas:</strong> {{ camara.notas }}</li>
+                    </ul>
+
+                    <!-- Vista previa de la imagen en Base64 -->
+                    {% if camara.first_frame_base64 %}
+                        <div class="mt-4 text-center">
+                            <h5>Vista Previa:</h5>
+                            <img src="data:image/jpeg;base64,{{ camara.first_frame_base64 }}" alt="Vista previa del primer fotograma" class="img-fluid rounded" style="max-height: 300px; object-fit: cover;">
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3 text-center">
+                        <a href="/camaras/editarCamara/{{ camara.id_camara }}" class="btn btn-primary">Editar Cámara</a>
+                        <a href="/camaras/" class="btn btn-secondary">Volver a la lista</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
