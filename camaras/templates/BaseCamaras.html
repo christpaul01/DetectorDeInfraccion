@@ -3,7 +3,11 @@
 <head>
     {% load static %}
     <meta charset="UTF-8">
-    <title>Configuracion de Camaras</title>
+    <title>
+      {% block title %}
+
+      {% endblock %}
+    </title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/jquery/3.2.1/jquery.min.js"></script>
@@ -46,6 +50,15 @@
 
 
 <div class="container py-4">
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
     {%  block body%}
 
     {%  endblock %}

@@ -27,4 +27,12 @@ urlpatterns = [
     path('stream/<int:id_camara>/', views.stream_video, name='stream_video'),
     path('stream/<int:id_camara>/video/', views.stream_video_content, name='stream_video_content'),
 
+    # login path
+    path('login/', views.loginpage, name='login'),
+
+    # logout path
+    path('logout/', views.logoutpage, name='logout'),
+
+    # register path
+    path('register/', views.registerpage, name='register'),
 ]
