@@ -124,7 +124,7 @@ def registarCamara(request):
 
     return redirect('/')
 
-
+@login_required
 def stream_video(request, id_camara):
     # Attempt to get the camera object
     camara = get_object_or_404(Camara, id_camara=id_camara)
@@ -138,6 +138,7 @@ def stream_video(request, id_camara):
 
     return render(request, 'stream.html', context)
 
+@login_required
 def stream_video_content(request, id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
@@ -176,11 +177,13 @@ def stream_video_content(request, id_camara):
 #                                      content_type='multipart/x-mixed-replace; boundary=frame')
 #     return response
 
+@login_required
 def start_camara(request, id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
     utilidades.start_detection(camara.id_camara)
     return redirect('/')
 
+@login_required
 def editarCamara(request,id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
@@ -210,7 +213,8 @@ def detallesCamara(request, id_camara):
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
 
-#Error para completar la edicion, se supone que hay que enviar el id_camara pero en el tutorial no lo hacen de esa forma
+# TODO: Mejorar funcion con recepcion de ID en el request
+@login_required
 def edicionCamara(request):
     idCamara = request.POST['idCamara']
     nombre = request.POST['nombreCamara']
@@ -273,7 +277,8 @@ def edicionCamara(request):
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
 
-
+# TODO: Cambiar a estado inactivo
+@login_required
 def eliminarCamara(request,id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
@@ -328,6 +333,10 @@ def registrarDireccion(request):
 
 
 def loginpage(request):
+
+    if request.user.is_authenticated:
+        return redirect('/')
+
     if request.method == 'GET':
         return render(request, 'login.html')
 
@@ -344,6 +353,10 @@ def loginpage(request):
             return redirect('login')
 
 def registerpage(request):
+
+    if request.user.is_authenticated:
+        return redirect('/')
+
     if request.method == 'GET':
         return render(request, 'register.html')
     if request.method == 'POST':
