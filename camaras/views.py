@@ -16,7 +16,7 @@ from . import util as utilidades
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib import messages
 
 
@@ -379,6 +379,11 @@ def registerpage(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=password)
+
+            # Add the user to the NormalStaff group
+            normal_staff_group = Group.objects.get(name='NormalStaff')
+            user.groups.add(normal_staff_group)
+
             login(request, user)
             messages.success(request,
                              f'You have registered your account successfully! Logged in as {user.username}')
@@ -392,3 +397,20 @@ def logoutpage(request):
     logout(request)
     messages.success(request, f'You have been logged out!')
     return redirect('/')
+
+
+# NOTE: Users and Groups
+
+def set_user_to_admin(request, idUser):
+
+    if request.method == 'POST':
+        if not request.user.has_perm('camaras.change_user'):
+            error_type = "Error de permisos"
+            error_message = "No tienes permisos para cambiar el rol de los usuarios."
+            context = {"error_type": error_type, "error_message": error_message}
+            return render(request, 'error.html', context)
+        else:
+            user = User.objects.get(id=idUser)
+            admin_group = Group.objects.get(name='Admin')
+            user.groups.add(admin_group)
+            return redirect('/')
