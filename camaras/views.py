@@ -15,7 +15,7 @@ from . import util as utilidades
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 
@@ -55,6 +55,7 @@ def nuevaCamara(request):
     context = {"next_id": next_id}
     return render(request, 'nuevaCamara.html', context)
 
+@permission_required('camaras.add_camara')
 @login_required
 def registarCamara(request):
     idCamara = get_next_camera_id()
@@ -297,11 +298,11 @@ def camaras(request):
 
 # NOTE: Bloque Direccion
 
-
 def listarDirecciones(request):
     direcciones = Direccion.objects.all()
     context = {"direcciones": direcciones}
     return render(request, 'listarDirecciones.html', context)
+
 
 def gestionDirecciones(request):
     direcciones = Direccion.objects.all()
@@ -309,7 +310,17 @@ def gestionDirecciones(request):
     context = {"next_id": next_id, "direcciones": direcciones}
     return render(request, 'configDireccion.html', context)
 
+
+@login_required
 def eliminarDireccion(request, id_direccion):
+    has_permission = request.user.has_perm('camaras.delete_direccion')
+    if not has_permission:
+        error_type = "Error de permisos"
+        error_message = "No tienes permisos para eliminar direcciones."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
+
     try:
         direccion = Direccion.objects.get(id_direccion=id_direccion)
         direccion.delete()
@@ -332,6 +343,8 @@ def registrarDireccion(request):
     return redirect('/direcciones/')
 
 
+
+# NOTES: Login, Logout and Register views
 def loginpage(request):
 
     if request.user.is_authenticated:
