@@ -29,12 +29,20 @@
                         <li class="list-group-item"><strong>Tiempo de Video:</strong> {{ camara.time_video }}</li>
                         <li class="list-group-item"><strong>Fecha de Creación:</strong> {{ camara.fecha_creacion|date:"d-m-Y H:i" }}</li>
                         <li class="list-group-item"><strong>Dirección:</strong>
-                            {% if camara.id_direccion_camara %}
-                                {{ camara.id_direccion_camara.direccion }}
+                            {% if direccion %}
+                                {{ direccion }}
                             {% else %}
                                 No asignada
                             {% endif %}
                         </li>
+                        <li class="list-group-item"><strong>Creado Por:</strong>
+                            {% if camara.user %}
+                                {{ camara.user.username }}
+                            {% else %}
+                                Usuario Defecto
+                            {% endif %}
+                        </li>
+
                         <li class="list-group-item"><strong>Tiene ROI Prohibida:</strong> {{ has_roi_p }}</li>
                         <li class="list-group-item"><strong>Notas:</strong> {{ camara.notas }}</li>
                     </ul>

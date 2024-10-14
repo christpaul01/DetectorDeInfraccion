@@ -27,6 +27,7 @@ class Camara(models.Model):
     resolucion_camara = models.CharField(max_length=255)
     notas = models.CharField(max_length=255)
     first_frame_base64 = models.TextField(blank=True, null=True)
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, blank=True, null=True)
 
 
 

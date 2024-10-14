@@ -44,7 +44,8 @@ def home(request):
     camaras = utilidades.get_camaras()
     #camaras = Camara.objects.all()
     next_id = get_next_camera_id()
-    context = {"camaras": camaras, "next_id": next_id}
+    direcciones = Direccion.objects.all()
+    context = {"camaras": camaras, "next_id": next_id, "direcciones": direcciones}
     return render(request, "configCamaras.html", context)
 
 
@@ -52,15 +53,27 @@ def home(request):
 @login_required
 def nuevaCamara(request):
     next_id = get_next_camera_id()
-    context = {"next_id": next_id}
+    direcciones = Direccion.objects.all()
+    context = {"next_id": next_id, "direcciones": direcciones}
     return render(request, 'nuevaCamara.html', context)
 
-@permission_required('camaras.add_camara')
+
 @login_required
 def registarCamara(request):
+    if not permission_required('camaras.add_camara'):
+        print("El usuario no tiene permisos")
+        return redirect('/')
+
+
     idCamara = get_next_camera_id()
     nombre = request.POST['nombreCamara']
     estado = request.POST['estadoCamara']
+    direccion = request.POST['idDireccionCamara']
+
+    if direccion == "":
+        direccion = None
+
+    user = request.user
 
     isROINormalSelected = request.POST.get('ROINormal', True)
     isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
@@ -97,7 +110,7 @@ def registarCamara(request):
         Camara.objects.create(id_camara=idCamara, nombre_camara=nombre, url_camara= url_video_path,
                               estado_camara=estado, frame_rate=fps, resolucion_camara=resolucionCamara,
                               fecha_creacion = datetime.now(),frame_count=frame_count_video,
-                              video_length=video_length, first_frame_base64=first_frame_64)
+                              video_length=video_length, first_frame_base64=first_frame_64, user = user, id_direccion_camara_id=direccion)
     else:
         error_type = "Error de procesamiento"
         error_message = "No se pudo obtener las informaciones del video."
@@ -204,9 +217,14 @@ def editarCamara(request,id_camara):
 def detallesCamara(request, id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
+        direccion_camara = Direccion.objects.filter(id_direccion=camara.id_direccion_camara_id).first()
+        if direccion_camara is not None:
+            direccion_camara = direccion_camara.nombre_direccion
+        else:
+            direccion_camara = None
         has_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').first() is not None
 
-        context = {"camara": camara, "has_roi_p": has_roi_p}
+        context = {"camara": camara, "has_roi_p": has_roi_p, "direccion": direccion_camara}
         return render(request, 'detallesCamara.html', context)
     except Camara.DoesNotExist:
         error_type = "Error de procesamiento"
