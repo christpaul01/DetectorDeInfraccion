@@ -11,6 +11,7 @@ class Direccion(models.Model):
     ciudad = models.CharField(max_length=255)
     pais = models.CharField(max_length=255)
     detalles = models.CharField(max_length=255)
+    google_maps_url = models.CharField(max_length=255, blank=True, null=True)
 
 
 class Camara(models.Model):

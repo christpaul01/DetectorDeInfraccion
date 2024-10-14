@@ -314,6 +314,11 @@ def camaras(request):
     template = loader.get_template('configCamaras.html')
     return HttpResponse(template.render())
 
+
+
+
+
+
 # NOTE: Bloque Direccion
 
 def listarDirecciones(request):
@@ -322,12 +327,45 @@ def listarDirecciones(request):
     return render(request, 'listarDirecciones.html', context)
 
 
+def verDireccion(request, id_direccion):
+    direccion = Direccion.objects.get(id_direccion=id_direccion)
+    context = {"direccion": direccion}
+    return render(request, 'verDireccion.html', context)
+
+
 def gestionDirecciones(request):
     direcciones = Direccion.objects.all()
     next_id = get_next_direccion_id()
     context = {"next_id": next_id, "direcciones": direcciones}
     return render(request, 'configDireccion.html', context)
 
+@login_required
+def editarDireccion(request, id_direccion):
+    if not request.user.has_perm('camaras.change_direccion'):
+        error_type = "Error de permisos"
+        error_message = "No tienes permisos para editar direcciones."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+    else:
+        print("El usuario tiene permisos")
+
+    if(request.method == 'GET'):
+        direccion = Direccion.objects.get(id_direccion=id_direccion)
+        context = {"direccion": direccion}
+        return render(request, 'editarDireccion.html', context)
+
+    if(request.method == 'POST'):
+        nombre_direccion = request.POST['nombreDireccion']
+        municipio = request.POST['municipio']
+        ciudad = request.POST['ciudad']
+        pais = request.POST['pais']
+        detalles = request.POST['detalles']
+        google_maps_url = request.POST['googleMapsUrl']
+
+        (Direccion.objects.filter(id_direccion=id_direccion).update
+         (nombre_direccion=nombre_direccion, municipio=municipio, ciudad=ciudad,
+          pais=pais, detalles=detalles, google_maps_url=google_maps_url))
+        return redirect('/direcciones/')
 
 @login_required
 def eliminarDireccion(request, id_direccion):
@@ -349,6 +387,7 @@ def eliminarDireccion(request, id_direccion):
         return render(request, 'error.html', context)
     return redirect('/direcciones/')
 
+@login_required
 def registrarDireccion(request):
     idDireccion = request.POST['idDireccion']
     nombreDireccion = request.POST['nombreDireccion']
@@ -356,8 +395,11 @@ def registrarDireccion(request):
     ciudad = request.POST['ciudad']
     pais = request.POST['pais']
     detalles = request.POST['detalles']
+    google_maps_url = request.POST['googleMapsUrl']
 
-    Direccion.objects.create(id_direccion=idDireccion, nombre_direccion=nombreDireccion, municipio=municipio, ciudad=ciudad, pais=pais, detalles=detalles)
+    Direccion.objects.create(id_direccion=idDireccion, nombre_direccion=nombreDireccion,
+                             municipio=municipio, ciudad=ciudad, pais=pais, detalles=detalles,
+                             google_maps_url=google_maps_url)
     return redirect('/direcciones/')
 
 
@@ -432,3 +474,5 @@ def set_user_to_admin(request, idUser):
             admin_group = Group.objects.get(name='Admin')
             user.groups.add(admin_group)
             return redirect('/')
+
+

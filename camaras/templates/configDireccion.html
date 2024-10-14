@@ -1,6 +1,6 @@
 {% extends "./BaseCamaras.html" %}
 <p>Aqui podras configurar las direcciones del sistema</p>
-<a href="http://localhost:8000/camaras">Configurar Direccion</a>
+<a href="/camaras">Configurar Direccion</a>
 
 {% block body %}
     <div class="row">
@@ -39,6 +39,11 @@
                             <input type="text" id="detalles" name="detalles" class="form-control" placeholder="Detalles" maxlength="255" required>
                         </div>
 
+                        <!-- Google Maps URl -->
+                        <div class="form-group">
+                            <input type="text" id="googleMapsUrl" name="googleMapsUrl" class="form-control" placeholder="Google Maps URL" maxlength="255" >
+                        </div>
+
                         <!-- Botón de Guardar -->
                         <div class="form-group">
                             <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
@@ -72,8 +77,9 @@
                             <td>{{ d.ciudad }}</td>
                             <td>{{ d.pais }}</td>
                             <td>{{ d.detalles }}</td>
+                            <td><a href="verDireccion/{{ d.id_direccion }}" class="btn btn-primary">Ver</a></td>
                             <td><a href="editarDireccion/{{ d.id_direccion }}" class="btn btn-info">Editar</a></td>
-                            <td><a href="eliminarDireccion/{{ d.id_direccion }}" class="btn btn-danger btnEliminacion">Eliminar</a></td>
+                            <td><a href="eliminarDireccion/{{ d.id_direccion }}" class="btn btn-outline-danger btnEliminacion">Eliminar</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

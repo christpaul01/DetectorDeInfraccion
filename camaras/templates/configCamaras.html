@@ -84,11 +84,13 @@
                        <td>{{c.nombre_camara}}</td>
                        <td>{{c.estado_camara}}</td>
                        <td>{{c.resolucion_camara}}</td>
-                        <td><a href="detallesCamara/{{c.id_camara}}" class="btn btn-sm btn-primary">Ver</a> </td>
+                        <td><a href="stream/{{c.id_camara}}" class="btn btn-sm btn-info">Stream</a> </td>
+                        <td><a href="iniciarCamara/{{c.id_camara}}" class="btn btn-success btn-sm btnIniciar">Iniciar</a> </td>
+                        <td><a href="detallesCamara/{{c.id_camara}}" class="btn btn-sm btn-outline-primary">Detalles</a> </td>
 {#                       <td><a href="editarCamara/{{c.id_camara}}" class="btn btn-info">Editar</a> </td>#}
-                       <td><a href="eliminarCamara/{{c.id_camara}}" class="btn btn-danger btn-sm btnEliminacion">Eliminar</a> </td>
-                     <td><a href="stream/{{c.id_camara}}" class="btn btn-sm btn-info">Stream</a> </td>
-                     <td><a href="iniciarCamara/{{c.id_camara}}" class="btn btn-success btn-sm btnIniciar">Iniciar</a> </td>
+                       <td><a href="eliminarCamara/{{c.id_camara}}" class="btn btn-outline-danger btn-sm btnEliminacion">Eliminar</a> </td>
+
+
                  </tr>
                  {%  endfor %}
              </tbody>

@@ -10,7 +10,7 @@
                     <h5 class="mb-0 text-center">{{ camara.nombre_camara }}</h5>
                 </div>
                 <div class="card-body d-flex flex-column align-items-center">
-                    <h5 class="card-title text-center">Información General</h5>
+
                     <ul class="list-group list-group-flush text-center">
                         <!-- Vista previa de la imagen en Base64 -->
                         {% if camara.first_frame_base64 %}
@@ -19,6 +19,8 @@
                                 <img src="data:image/jpeg;base64,{{ camara.first_frame_base64 }}" alt="Vista previa del primer fotograma" class="img-fluid rounded" style="max-height: 300px; object-fit: cover;">
                             </div>
                         {% endif %}
+                        <br>
+                        <h4 class="card-title text-center">Información General</h4>
                         <li class="list-group-item"><strong>ID:</strong> {{ camara.id_camara }}</li>
                         <li class="list-group-item"><strong>Nombre:</strong> {{ camara.nombre_camara }}</li>
                         <li class="list-group-item"><strong>Estado:</strong> {{ camara.estado_camara }}</li>
