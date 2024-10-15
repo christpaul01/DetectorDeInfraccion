@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from datetime import datetime
 
@@ -13,6 +14,12 @@ class Direccion(models.Model):
     detalles = models.CharField(max_length=255)
     google_maps_url = models.CharField(max_length=255, blank=True, null=True)
 
+class Umbrales(models.Model):
+    id_umbral = models.AutoField(primary_key=True)
+    nombre_umbral = models.CharField(max_length=255)
+    valor_umbral = models.FloatField(default=0.5, validators=[MinValueValidator(0.4), MaxValueValidator(0.99)])
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    notas = models.CharField(max_length=255)
 
 class Camara(models.Model):
     id_camara = models.AutoField(primary_key=True)
@@ -29,8 +36,10 @@ class Camara(models.Model):
     notas = models.CharField(max_length=255)
     first_frame_base64 = models.TextField(blank=True, null=True)
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, blank=True, null=True)
-
-
+    # Campos de umbrales (thresholds) para detección en YOLO
+    threshold_vehicle = models.FloatField(default=0.55, validators=[MinValueValidator(0.4), MaxValueValidator(0.99)])
+    threshold_license_plate = models.FloatField(default=0.55, validators=[MinValueValidator(0.4), MaxValueValidator(0.99)])
+    threshold_helmet = models.FloatField(default=0.55, validators=[MinValueValidator(0.4), MaxValueValidator(0.99)])
 
 class ROI(models.Model):
     TIPO_ROI_CHOICES = [
@@ -75,7 +84,6 @@ class TipoVehiculo(models.Model):
 class TipoInfraccion(models.Model):
     id_tipo_infraccion = models.AutoField(primary_key=True)
     nombre_tipo_infraccion = models.CharField(max_length=255)
-    cant_pagar = models.CharField(max_length=255)
     detalles = models.CharField(max_length=255)
 
 class Matricula:

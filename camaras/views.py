@@ -235,66 +235,80 @@ def detallesCamara(request, id_camara):
 # TODO: Mejorar funcion con recepcion de ID en el request
 @login_required
 def edicionCamara(request):
-    idCamara = request.POST['idCamara']
-    nombre = request.POST['nombreCamara']
-    estado = request.POST['estadoCamara']
 
-    isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
-    is_roi_edit = request.POST.get('editarROI') == 'Si'
-    video_path = Camara.objects.get(id_camara=idCamara).url_camara
-
-    try :
-        camara = Camara.objects.get(id_camara=idCamara)
-        camara.id_camara = idCamara
-        camara.nombre_camara = nombre
-        camara.estado_camara = estado
-        camara.save()
-
-        try:
-            roi_n = ROI.objects.get(id_camara=idCamara, tipo_roi='N')
-        except ROI.DoesNotExist:
-            roi_n = None
-
-        if roi_n:
-            if is_roi_edit:
-                coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Normal")
-                roi_n.coordenadas = coordenadas_n
-                roi_n.fecha_creacion = datetime.now()
-                roi_n.save()
-        else:
-            coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Normal")
-            fecha_creacion = DateField(auto_now_add=True)
-            ROI.objects.create(id_camara=camara, coordenadas=coordenadas_n, estado_roi='A', tipo_roi='N', fecha_creacion=fecha_creacion)
-
-
-        try:
-            roi_p = ROI.objects.get(id_camara=idCamara, tipo_roi='P')
-        except ROI.DoesNotExist:
-            roi_p = None
-
-        if roi_p:
-            if is_roi_edit:
-                if isROIProhibidoSelected:
-                    coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
-                    roi_p.coordenadas = coordenadas_p
-                    roi_p.fecha_creacion = datetime.now()
-                    roi_p.save()
-            else:
-                if not isROIProhibidoSelected:
-                    # TODO: Modificar el estado del ROI a inactivo
-                    roi_p.delete()
-        else:
-            if isROIProhibidoSelected:
-                coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
-                fecha_creacion = DateField(auto_now_add=True)
-                ROI.objects.create(id_camara=camara, coordenadas=coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fecha_creacion)
-
-        return redirect('/')
-    except Camara.DoesNotExist:
-        error_type = "Error de procesamiento"
-        error_message = "No existe la cámara de ID:" + idCamara
+    if not request.user.has_perm('camaras.change_camara'):
+        error_type = "Error de permisos"
+        error_message = "No tienes permisos para editar cámaras."
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
+
+    if request.method == 'POST':
+        idCamara = request.POST['idCamara']
+        nombre = request.POST['nombreCamara']
+        estado = request.POST['estadoCamara']
+        threshold_vehicle = request.POST['thresholdVehicle']
+        threshold_license_plate = request.POST['thresholdLicensePlate']
+        threshold_helmet = request.POST['thresholdHelmet']
+
+        isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
+        is_roi_edit = request.POST.get('editarROI') == 'Si'
+        video_path = Camara.objects.get(id_camara=idCamara).url_camara
+
+        try :
+            camara = Camara.objects.get(id_camara=idCamara)
+            camara.id_camara = idCamara
+            camara.nombre_camara = nombre
+            camara.estado_camara = estado
+            camara.threshold_vehicle = threshold_vehicle
+            camara.threshold_license_plate = threshold_license_plate
+            camara.threshold_helmet = threshold_helmet
+            camara.save()
+
+            try:
+                roi_n = ROI.objects.get(id_camara=idCamara, tipo_roi='N')
+            except ROI.DoesNotExist:
+                roi_n = None
+
+            if roi_n:
+                if is_roi_edit:
+                    coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Normal")
+                    roi_n.coordenadas = coordenadas_n
+                    roi_n.fecha_creacion = datetime.now()
+                    roi_n.save()
+            else:
+                coordenadas_n = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Normal")
+                fecha_creacion = DateField(auto_now_add=True)
+                ROI.objects.create(id_camara=camara, coordenadas=coordenadas_n, estado_roi='A', tipo_roi='N', fecha_creacion=fecha_creacion)
+
+
+            try:
+                roi_p = ROI.objects.get(id_camara=idCamara, tipo_roi='P')
+            except ROI.DoesNotExist:
+                roi_p = None
+
+            if roi_p:
+                if is_roi_edit:
+                    if isROIProhibidoSelected:
+                        coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
+                        roi_p.coordenadas = coordenadas_p
+                        roi_p.fecha_creacion = datetime.now()
+                        roi_p.save()
+                else:
+                    if not isROIProhibidoSelected:
+                        # TODO: Modificar el estado del ROI a inactivo
+                        roi_p.delete()
+            else:
+                if isROIProhibidoSelected:
+                    coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
+                    fecha_creacion = DateField(auto_now_add=True)
+                    ROI.objects.create(id_camara=camara, coordenadas=coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fecha_creacion)
+
+            return redirect('/')
+        except Camara.DoesNotExist:
+            error_type = "Error de procesamiento"
+            error_message = "No existe la cámara de ID:" + idCamara
+            context = {"error_type": error_type, "error_message": error_message}
+            return render(request, 'error.html', context)
 
 # TODO: Cambiar a estado inactivo
 @login_required
@@ -476,3 +490,11 @@ def set_user_to_admin(request, idUser):
             return redirect('/')
 
 
+
+
+
+
+# NOTE: Ajustes del Sistema
+
+def ajustesSistema(request):
+    return render(request, 'ajustesSistema.html')
