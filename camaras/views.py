@@ -3,9 +3,10 @@ from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, StreamingHttpResponse
 from django.template import loader
-
+from torch.distributed.pipeline.sync.skip.portal import Context
 
 from .models import Camara, Direccion, ROI
+from .models import Umbral, TipoInfraccion, TipoVehiculo
 from django.db.models import Max, DateField
 from tkinter import filedialog
 import cv2
@@ -323,10 +324,16 @@ def eliminarCamara(request,id_camara):
         return render(request, 'error.html', context)
     return redirect('/')
 
-def camaras(request):
 
-    template = loader.get_template('configCamaras.html')
-    return HttpResponse(template.render())
+@login_required
+def verConfiguracionSistema(request):
+
+    umbrales = Umbral.objects.all()
+    tipoInfracciones = TipoInfraccion.objects.all()
+    tipoVehiculos = TipoVehiculo.objects.all()
+
+    context = {"umbrales": umbrales, "tipoInfracciones": tipoInfracciones, "tipoVehiculos": tipoVehiculos}
+    return render(request, 'verConfiguracionSistema.html', context)
 
 
 

@@ -5,7 +5,7 @@ urlpatterns = [
     # Bloque Home
     path('', views.home, name='home'),
     # Bloque Camaras
-    path('camaras/', views.camaras, name='camaras'),
+    # path('camaras/', views.camaras, name='camaras'),
     path('iniciarCamara/<id_camara>', views.start_camara),
     path('nuevaCamara/', views.nuevaCamara),
     path('registrarCamara/', views.registarCamara),
@@ -46,6 +46,9 @@ urlpatterns = [
 
     # set User to Admnin
     path('setAdmin/<int:id>', views.set_user_to_admin, name='setAdmin'),
+
+    # NOTE: This path is for settings
+    path('configuracion/', views.verConfiguracionSistema, name='configuracionSistema'),
 
 
 ]

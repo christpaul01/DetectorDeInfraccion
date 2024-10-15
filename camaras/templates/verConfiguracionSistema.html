@@ -1,0 +1,105 @@
+{% extends "./BaseCamaras.html" %}
+
+{% block title %}
+    Informacion del Sistema
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center">Informacion del Sistema</h1>
+
+    <div class="card my-4">
+        <div class="card-header bg-primary text-white">
+            <h5>Umbrales</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre del Umbral</th>
+                        <th>Valor del Umbral</th>
+                        <th>Notas</th>
+                        <th>Fecha de Creación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for umbral in umbrales %}
+                    <tr>
+                        <td>{{ umbral.id_umbral }}</td>
+                        <td>{{ umbral.nombre_umbral }}</td>
+                        <td>{{ umbral.valor_umbral }}</td>
+                        <td>{{ umbral.notas }}</td>
+                        <td>{{ umbral.fecha_creacion|date:"d-m-Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No hay umbrales registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card my-4">
+        <div class="card-header bg-secondary text-white">
+            <h5>Tipos de Infracciones</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de la Infracción</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for infraccion in tipoInfracciones %}
+                    <tr>
+                        <td>{{ infraccion.id_tipo_infraccion }}</td>
+                        <td>{{ infraccion.nombre_tipo_infraccion }}</td>
+                        <td>{{ infraccion.detalles }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No hay tipos de infracciones registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card my-4">
+        <div class="card-header bg-success text-white">
+            <h5>Tipos de Vehículos</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre del Vehículo</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehiculo in tipoVehiculos %}
+                    <tr>
+                        <td>{{ vehiculo.id_tipo_vehiculo }}</td>
+                        <td>{{ vehiculo.nombre_tipo_vehiculo }}</td>
+                        <td>{{ vehiculo.detalles }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No hay tipos de vehículos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

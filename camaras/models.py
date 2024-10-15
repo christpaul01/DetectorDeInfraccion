@@ -14,7 +14,7 @@ class Direccion(models.Model):
     detalles = models.CharField(max_length=255)
     google_maps_url = models.CharField(max_length=255, blank=True, null=True)
 
-class Umbrales(models.Model):
+class Umbral(models.Model):
     id_umbral = models.AutoField(primary_key=True)
     nombre_umbral = models.CharField(max_length=255)
     valor_umbral = models.FloatField(default=0.5, validators=[MinValueValidator(0.4), MaxValueValidator(0.99)])

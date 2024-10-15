@@ -38,6 +38,42 @@ def create_default_infraccion_types(sender, **kwargs):
                 pass
 
 
+from django.core.exceptions import ObjectDoesNotExist
+from .models import Umbral
+
+
+def create_default_thresholds(sender, **kwargs):
+    # Datos de los umbrales predeterminados
+    threshold_data = [
+        {"nombre_umbral": "Threshold_Vehicle", "valor_umbral": 0.5, "notas": "Umbral para la detección de vehículos"},
+        {"nombre_umbral": "Threshold_Helmet", "valor_umbral": 0.70, "notas": "Umbral para la detección de cascos"},
+        {"nombre_umbral": "Threshold_LicensePlate", "valor_umbral": 0.65,
+         "notas": "Umbral para la detección de matrículas"},
+    ]
+
+    # Iterar sobre los umbrales para verificar si existen o crearlos
+    for threshold in threshold_data:
+        try:
+            umbral, created = Umbral.objects.get_or_create(
+                nombre_umbral=threshold["nombre_umbral"],
+                defaults={
+                    "valor_umbral": threshold["valor_umbral"],
+                    "notas": threshold["notas"]
+                }
+            )
+
+            if created:
+                print(f"Umbral '{threshold['nombre_umbral']}' creado con éxito.")
+            else:
+                pass
+                #print(f"El umbral '{threshold['nombre_umbral']}' ya existe.")
+        except ObjectDoesNotExist:
+            print(f"Error creando el umbral '{threshold['nombre_umbral']}'.")
+
+
+# Usar esta función en las señales o llamarla cuando se inicie el sistema
+
+
 def create_default_vehicle_types(sender, **kwargs):
     vehicle_data = [
         {"id": 2, "nombre": "Coche", "detalles": "Vehículo de cuatro ruedas"},
@@ -165,3 +201,4 @@ def register_signals():
     post_migrate.connect(create_admin_group)
     post_migrate.connect(create_default_vehicle_types)
     post_migrate.connect(create_default_infraccion_types)
+    post_migrate.connect(create_default_thresholds)
