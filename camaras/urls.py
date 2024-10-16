@@ -47,6 +47,15 @@ urlpatterns = [
     # set User to Admnin
     path('setAdmin/<int:id>', views.set_user_to_admin, name='setAdmin'),
 
+    # set User to Normal
+    path('convertirEmpleado/<int:id>', views.change_user_to_normal_staff, name='setNormal'),
+
+    # List all Users
+    path('listarUsuarios/', views.listar_usuarios, name='listUsers'),
+
+    # Desactivar Usuario
+    path('cambiarEstadoCuenta/<int:id>', views.cambiarEstadoCuenta, name='cambiarEstadoCuenta'),
+
     # NOTE: This path is for settings
     path('configuracion/', views.verConfiguracionSistema, name='configuracionSistema'),
 

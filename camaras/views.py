@@ -440,6 +440,11 @@ def loginpage(request):
         user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
+            # Convierte al usuario en Admin si es superusuario y no es Admin
+            if user.is_superuser and not user.groups.filter(name='Admin').exists():
+                admin_group = Group.objects.get(name='Admin')
+                user.groups.add(admin_group)
+
             messages.success(request, f'You are logged in as {user.username}')
             return redirect('/')
         else:
@@ -459,7 +464,8 @@ def registerpage(request):
             form.save()
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
-            user = authenticate(username=username, password=password)
+            email = form.cleaned_data.get('email')
+            user = authenticate(username=username, password=password, email=email)
 
             # Add the user to the NormalStaff group
             normal_staff_group = Group.objects.get(name='NormalStaff')
@@ -480,28 +486,102 @@ def logoutpage(request):
     return redirect('/')
 
 
-# NOTE: Users and Groups
+# NOTE: Bloque Usuarios y Grupos
 
-def set_user_to_admin(request, idUser):
-
-    if request.method == 'POST':
+def set_user_to_admin(request, id):
+    if request.method == 'POST' or request.method == 'GET':
         if not request.user.has_perm('camaras.change_user'):
             error_type = "Error de permisos"
             error_message = "No tienes permisos para cambiar el rol de los usuarios."
             context = {"error_type": error_type, "error_message": error_message}
             return render(request, 'error.html', context)
         else:
-            user = User.objects.get(id=idUser)
+            user = User.objects.get(id=id)
             admin_group = Group.objects.get(name='Admin')
             user.groups.add(admin_group)
-            return redirect('/')
+            return redirect('/listarUsuarios')
+
+def change_user_to_normal_staff(request, id):
+    if request.method == 'POST' or request.method == 'GET':
+        if not request.user.has_perm('camaras.change_user'):
+            error_type = "Error de permisos"
+            error_message = "No tienes permisos para cambiar el rol de los usuarios."
+            context = {"error_type": error_type, "error_message": error_message}
+            return render(request, 'error.html', context)
+        else:
+            user = User.objects.get(id=id)
+            if user:
+                if user.is_superuser:
+                    messages.error(request, 'No se puede cambiar el rol de un superusuario.')
+                    return redirect('/listarUsuarios')
+                # Remove the user from the Admin group
+                admin_group = Group.objects.get(name='Admin')
+                user.groups.remove(admin_group)
+                # Add the user to the NormalStaff group
+                normal_staff_group = Group.objects.get(name='NormalStaff')
+                user.groups.add(normal_staff_group)
+            else:
+                error_type = "Error de procesamiento"
+                error_message = "No se encontró el usuario solicitado."
+                context = {"error_type": error_type, "error_message": error_message}
+                return render(request, 'error.html', context)
+
+            return redirect('/listarUsuarios')
+
+@login_required
+def listar_usuarios(request):
+    if not request.user.has_perm('camaras.view_user'):
+        error_type = "Error de permisos"
+        error_message = "No tienes permisos para ver la lista de usuarios."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
 
 
+    usuarios = User.objects.all()
+    usuarios_info = []
 
+    for user in usuarios:
+        is_admin = user.groups.filter(name="Admin").exists()
+        is_normal_staff = user.groups.filter(name="NormalStaff").exists()
+        print(f"User: {user.username}, is_admin: {is_admin}, is_normal_staff: {is_normal_staff}")
+        usuarios_info.append({
+            "user": user,
+            "is_admin": is_admin,
+            "is_normal_staff": is_normal_staff,
+        })
 
+    context = {"usuarios_info": usuarios_info}
+    return render(request, 'listarUsuarios.html', context)
 
+def cambiarEstadoCuenta(request, id):
+    if request.method == 'POST' or request.method == 'GET':
+        if not request.user.has_perm('camaras.change_user'):
+            error_type = "Error de permisos"
+            error_message = "No tienes permisos para cambiar el rol de los usuarios."
+            context = {"error_type": error_type, "error_message": error_message}
+            return render(request, 'error.html', context)
+        else:
+            user = User.objects.get(id=id)
+            if user:
+                if user.is_superuser:
+                    if not user.is_active:
+                        user.is_active = not user.is_active
+                        user.save()
+                        return redirect('/listarUsuarios')
+                    else:
+                        messages.error(request, 'No se puede desactivar la cuenta de un superusuario.')
+                        return redirect('/listarUsuarios')
+
+                user.is_active = not user.is_active
+                user.save()
+                return redirect('/listarUsuarios')
+            else:
+                error_type = "Error de procesamiento"
+                error_message = "No se encontró el usuario solicitado."
+                context = {"error_type": error_type, "error_message": error_message}
+                return render(request, 'error.html', context)
 
 # NOTE: Ajustes del Sistema
-
+@login_required
 def ajustesSistema(request):
     return render(request, 'ajustesSistema.html')

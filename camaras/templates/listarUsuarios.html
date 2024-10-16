@@ -1,0 +1,61 @@
+{% extends "./BaseCamaras.html" %}
+{% block title %}
+    Listar Usuarios
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Lista de Usuarios</h1>
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Usuario</th>
+                        <th>Nombre Completo</th>
+                        <th>Email</th>
+                        <th>Opciones</th>
+                        <th>Estado Cuenta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for info in usuarios_info %}
+                    <tr>
+                        <td>{{ info.user.id }}</td>
+                        <td>{{ info.user.username }}</td>
+                        <td>{{ info.user.get_full_name }}</td>
+                        <td>{{ info.user.email }}</td>
+                        <td>
+                            <form method="POST" action="{% if info.is_admin %}/convertirEmpleado/{{ info.user.id }}
+                                {% elif info.is_normal_staff %}/setAdmin/{{ info.user.id }}
+                                {% else %} /convertirEmpleado/{{ info.user.id }}
+                                {% endif %}">
+                                {% csrf_token %}
+                                {% if info.is_admin %}
+                                    <button type="submit" class="btn btn-warning btn-sm">Convertir a Empleado Normal</button>
+                                {% elif info.is_normal_staff %}
+                                    <button type="submit" class="btn btn-primary btn-sm">Convertir a Admin</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Convertir a Empleado Normal</button>
+                                {% endif %}
+                            </form>
+                        </td>
+                        <td>
+                            <form method="POST" action="/cambiarEstadoCuenta/{{ info.user.id }}">
+                                {% csrf_token %}
+                                {% if info.user.is_active %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Desactivar</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-success btn-sm">Activar</button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
