@@ -1,0 +1,42 @@
+{% extends 'BaseCamaras.html' %}
+
+{% block title %}
+    Listado de Infracciones
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Listado de Infracciones</h1>
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID Infracción</th>
+                        <th>Tipo Vehículo</th>
+                        <th>ID Cámara</th>
+                        <th>Fecha Infracción</th>
+                        <th>Estado Infracción</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for infraccion in infracciones %}
+                    <tr>
+                        <td>{{ infraccion.id_infraccion }}</td>
+                        <td>{{ infraccion.id_tipo_vehiculo.nombre_tipo_vehiculo }}</td>  <!-- Asumiendo que `nombre_tipo_vehiculo` es el campo del modelo `TipoVehiculo` -->
+                        <td>{{ infraccion.id_camara.nombre_camara }}</td>  <!-- Asumiendo que `nombre_camara` es el campo del modelo `Camara` -->
+                        <td>{{ infraccion.fecha_infraccion }}</td>
+                        <td>{{ infraccion.estado_infraccion }}</td>
+                        <td>
+                            <a href="/verInfraccion/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-info">Ver</a>
+                            <a href="/revisarInfraccion/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-warning">Revisar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -56,6 +56,9 @@ urlpatterns = [
     # Desactivar Usuario
     path('cambiarEstadoCuenta/<int:id>', views.cambiarEstadoCuenta, name='cambiarEstadoCuenta'),
 
+    # Bloque de Infracciones
+    path('infracciones/', views.listarInfracciones, name='listarInfracciones'),
+
     # NOTE: This path is for settings
     path('configuracion/', views.verConfiguracionSistema, name='configuracionSistema'),
 

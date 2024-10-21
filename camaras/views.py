@@ -4,9 +4,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, StreamingHttpResponse
 from django.template import loader
 from torch.distributed.pipeline.sync.skip.portal import Context
+from torchgen.utils import context
+
 from .forms import CustomUserCreationForm  # Import the custom form
 
-from .models import Camara, Direccion, ROI
+from .models import Camara, Direccion, ROI, Infraccion
 from .models import Umbral, TipoInfraccion, TipoVehiculo
 from django.db.models import Max, DateField
 from tkinter import filedialog
@@ -592,6 +594,21 @@ def cambiarEstadoCuenta(request, id):
                 error_message = "No se encontró el usuario solicitado."
                 context = {"error_type": error_type, "error_message": error_message}
                 return render(request, 'error.html', context)
+
+
+# NOTE: Bloque Infracciones
+
+def listarInfracciones(request):
+    if not request.user.groups.filter(name='Admin').exists():
+        error_type = "Error de permisos"
+        error_message = "No tienes permisos para ver la lista de infracciones."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
+    infracciones = Infraccion.objects.all()
+    context = {"infracciones": infracciones}
+
+    return render(request, 'listarInfracciones.html', context)
 
 # NOTE: Ajustes del Sistema
 @login_required
