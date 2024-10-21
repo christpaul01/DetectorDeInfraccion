@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, StreamingHttpResponse
 from django.template import loader
 from torch.distributed.pipeline.sync.skip.portal import Context
+from .forms import CustomUserCreationForm  # Import the custom form
 
 from .models import Camara, Direccion, ROI
 from .models import Umbral, TipoInfraccion, TipoVehiculo
@@ -19,6 +20,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
+
 
 
 def get_next_camera_id():
@@ -451,34 +453,44 @@ def loginpage(request):
             messages.error(request, 'The combination of the user name and the password is wrong!')
             return redirect('login')
 
+
+@login_required
 def registerpage(request):
 
-    if request.user.is_authenticated:
-        return redirect('/')
+    # check if user is not admin
+    if not request.user.groups.filter(name='Admin').exists():
+        error_type = "Error de permisos"
+        error_message = "No tienes permisos para registrar usuarios."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
 
     if request.method == 'GET':
         return render(request, 'register.html')
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password1')
             email = form.cleaned_data.get('email')
-            user = authenticate(username=username, password=password, email=email)
+            role = request.POST['role']
+            user = form.save()
 
-            # Add the user to the NormalStaff group
-            normal_staff_group = Group.objects.get(name='NormalStaff')
-            user.groups.add(normal_staff_group)
+            # Authenticate user after saving
+            user = authenticate(username=username, password=password)
 
-            login(request, user)
-            messages.success(request,
-                             f'You have registered your account successfully! Logged in as {user.username}')
+            # Asignar grupo según el rol seleccionado
+            if role == 'Admin':
+                admin_group = Group.objects.get(name='Admin')
+                user.groups.add(admin_group)
+            elif role == 'NormalStaff':
+                normal_group = Group.objects.get(name='NormalStaff')
+                user.groups.add(normal_group)
+
+            messages.success(request, f'You have registered {user.username} account successfully!')
             return redirect('/')
         else:
             messages.error(request, form.errors)
             return redirect('register')
-
 
 def logoutpage(request):
     logout(request)
@@ -530,7 +542,7 @@ def change_user_to_normal_staff(request, id):
 
 @login_required
 def listar_usuarios(request):
-    if not request.user.has_perm('camaras.view_user'):
+    if not request.user.groups.filter(name='Admin').exists():
         error_type = "Error de permisos"
         error_message = "No tienes permisos para ver la lista de usuarios."
         context = {"error_type": error_type, "error_message": error_message}

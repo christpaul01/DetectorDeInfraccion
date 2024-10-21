@@ -42,7 +42,7 @@ urlpatterns = [
     path('logout/', views.logoutpage, name='logout'),
 
     # register path
-    path('register/', views.registerpage, name='register'),
+    path('registerUser/', views.registerpage, name='register'),
 
     # set User to Admnin
     path('setAdmin/<int:id>', views.set_user_to_admin, name='setAdmin'),
