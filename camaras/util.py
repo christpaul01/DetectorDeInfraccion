@@ -5,6 +5,9 @@ import tkinter as tk
 from collections import defaultdict
 from tkinter import filedialog
 
+from jupyter_client.consoleapp import classes
+from sympy.categories import Object
+from torch.nn.functional import threshold
 # import for yolo model
 from ultralytics import YOLO
 import cv2
@@ -17,7 +20,7 @@ import base64
 # For Streaming Video
 from django.http import StreamingHttpResponse
 
-from .models import Camara, Direccion, ROI
+from .models import Camara, Direccion, ROI, TipoVehiculo, Umbral
 
 
 def get_camaras():
@@ -30,66 +33,34 @@ def get_camaras():
     return Camara.objects.all()
 
 
-def is_inside_trapezoid(box, roi_vertices):
-    # box is an object bounding box as (x, y, w, h)
+def is_inside_trapezoid(point, roi_vertices):
+    # point is the center point (x, y) of the bounding box
     # roi_vertices are the vertices of the trapezoid ROI
-    x, y, w, h = box
+    return cv2.pointPolygonTest(np.array(roi_vertices, dtype=np.int32), point, False) >= 0
 
-    # Convert box to polygon
-    poly = np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]])
-
-    # Check if poly is inside ROI polygon
-    is_inside = cv2.pointPolygonTest(np.array(roi_vertices, dtype=np.int32), (int(x + w / 2), int(y + h / 2)),
-                                     False) >= 0
-
-
-def start_detection(id_camara):
+def start_vehicle_detection(id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
     nombre = camara.nombre_camara
     url_input = camara.url_camara
+    track_history = defaultdict(list)
+    # Initialize variables for frame processing time
+    processing_start_time = time.time()
+    processing_end_time = time.time()
+
+    vehicles = TipoVehiculo.objects.all().values_list('id_tipo_vehiculo', flat=True)
+    if vehicles is None:
+        # Default vehicles
+        vehicles = [2,3,5,7]
+
+    # Obtener el umbral de detección de vehículos desde la base de datos
+    threshold_vehicle = camara.threshold_vehicle
+    if threshold_vehicle is None:
+        # Si no hay umbral en la cámara, buscar en la tabla de umbrales, FALLBACKS
+        threshold_vehicle = Umbral.objects.filter(nombre_umbral='Threshold_Vehicle').first().valor_umbral
+        if threshold_vehicle is None:
+            threshold_vehicle = 0.55  # Umbral por defecto
 
     print(f"Trying to start detection from camera: {nombre}, url: {url_input}")
-
-    # TODO: Check why this is not working
-    # if not check_camara_files_integrity(camara):
-    #     return
-
-    # Carga de modelos
-    #yolov8s_model_path = "./modelos/yolov8s.pt"
-
-    # Get the absolute path of the current script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Construct the absolute path to the model file
-    LP_model_path = os.path.join(script_dir, './modelos/matriculas.pt')
-    helmet_model_path = os.path.join(script_dir, './modelos/best.pt')
-
-    # Check if the file exists
-    if not os.path.exists(LP_model_path):
-        print(f"Error: No se encontró el archivo {LP_model_path}")
-    else:
-        print(f"Archivo encontrado: {LP_model_path}")
-
-    if not os.path.exists(helmet_model_path):
-        print(f"Error: No se encontró el archivo {helmet_model_path}")
-    else:
-        print(f"Archivo encontrado: {helmet_model_path}")
-
-
-    model = YOLO('yolov8n.pt')
-    custom_LP_Model = YOLO(LP_model_path)
-    custom_H_Model = YOLO(helmet_model_path)
-
-    # TODO: Adjust manually in web interface
-    # Thresholds
-    thresholdVehicle = 0.5
-    thresholdLicensePlate = 0.4
-    thresholdHelmet = 0.7
-
-    # Vehicles = Car, motorcycle, bus, truck
-    vehicles = [2, 3, 5, 7]
-    # Helmets = With Helmet, Without helmet
-    helmets = [0, 1]
 
     # Check if the system has a CUDA GPU available
 
@@ -100,150 +71,116 @@ def start_detection(id_camara):
     else:
         print("Running on CPU")
 
-    # Open the video file
-    cap = cv2.VideoCapture(url_input)
-    # Check if camera or video opened successfully
-    ret, frame = cap.read()
-    # Get the video frame dimensions
-    H, W, _ = frame.shape
+    # Get the absolute path of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    print(f"Starting detection from camera: {nombre}, url: {url_input}")
+    # Construct the absolute path to the model file
+    helmet_model_path = os.path.join(script_dir, './modelos/best.pt')
+
+    # Check if the file exists
+    if not os.path.exists(helmet_model_path):
+        print(f"Error: No se encontró el archivo {helmet_model_path}")
+    else:
+        print(f"Archivo encontrado: {helmet_model_path}")
+
+
+
+    # Load YOLO models
+    model = YOLO('yolov8n.pt')
+
+    cap = cv2.VideoCapture(url_input)
+    ret, frame = cap.read()
+    # Get the video frame dimensions and frame rate
+    W, H, input_fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
+    # Calculate the time between frames to process
+    frame_time = 1 / input_fps
+    frame_num = 0
+
+    # Load ROIs
+    roi_vertices = [(0, 0), (W, 0), (W, H), (0, H)]  # Default values in case no ROI found
+    p_roi_vertices = [(0, 0), (W, 0), (W, H), (0, H)]  # Default prohibited ROI
 
     try:
-        print("Getting ROI")
-        roi_coordinates = ROI.objects.get(id_camara=id_camara, tipo_roi='N').coordenadas
-        # Convert the string representation to a list
-        roi_coordinates = ast.literal_eval(roi_coordinates)
+        roi_coordinates = ast.literal_eval(ROI.objects.get(id_camara=id_camara, tipo_roi='N').coordenadas)
         roi_vertices = [(x, y) for x, y in roi_coordinates]
     except ROI.DoesNotExist:
         print("ROI not found, using default values")
-        roi_coordinates = [(0, 0), (W, 0), (W, H), (0, H)]
 
     try:
-        print("Getting Prohibited ROI")
-        p_roi_coordenadas = ROI.objects.get(id_camara=id_camara, tipo_roi='P').coordenadas
-        # Convert the string representation to a list
-        p_roi_coordenadas = ast.literal_eval(p_roi_coordenadas)
+        p_roi_coordenadas = ast.literal_eval(ROI.objects.get(id_camara=id_camara, tipo_roi='P').coordenadas)
         p_roi_vertices = [(x, y) for x, y in p_roi_coordenadas]
     except ROI.DoesNotExist:
         print("Prohibited ROI not found, using default values")
-        p_roi_vertices = [(0, 0), (W, 0), (W, H), (0, H)]
 
-    video_path_out = '{}_out.mp4'.format(url_input)
-    # Create a video writer object to save the output video in a MP4 file
-    out = cv2.VideoWriter(video_path_out, cv2.VideoWriter_fourcc(*'MP4V'), int(cap.get(cv2.CAP_PROP_FPS)), (W, H))
+    crossed_vehicles = set()  # Track vehicles that have crossed
 
-    # Store the track history
-    track_history = defaultdict(lambda: [])
-
-    # Store the previous frame's bounding boxes and their corresponding IDs
-    prev_boxes = []
-    prev_track_ids = []
-
-    # Store the IDs of vehicles that have crossed from ROI to prohibited ROI
-    crossed_vehicles = set()
-
-
-
-    # TODO: Usar solamente para evaluacion de funcion
-    # TODO: open watch_video_from_frame in a thread to avoid blocking the main thread
-    # watch_video_from_frame(url, 0, 100)
-
-    # Loop through the video frames
     while cap.isOpened():
-        # Read a frame from the video
         success, frame = cap.read()
-
         if success:
+            frame_num += 1
+            processing_start_time = time.time()
 
-            # Run YOLOv8 tracking on the frame, persisting tracks between frames
-            results = model.track(frame, persist=True, classes=vehicles, tracker="bytetrack.yaml")
+            results = model.track(frame, persist=True, classes = vehicles, tracker="bytetrack.yaml")
 
             if results[0].boxes.id is not None:
-                # Get the boxes and track IDs
                 boxes = results[0].boxes.xywh.cpu().numpy().astype(int)
                 track_ids = results[0].boxes.id.cpu().numpy().astype(int)
+                scores = results[0].boxes.conf.cpu().numpy()
 
-                # Visualize the results on the frame
                 annotated_frame = results[0].plot()
 
-                results_H_custom = custom_H_Model(frame)[0]
-
-                for result in results_H_custom.boxes.data.tolist():
-                    x1, y1, x2, y2, score, class_id = result
-                    #helmet_box = (x1, y1, x2, y2)
-                    if score > thresholdHelmet and int(class_id) in helmets:
-                        cv2.rectangle(annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 4)
-                        cv2.putText(annotated_frame, results_H_custom.names[int(class_id)].upper(),
-                                    (int(x1), int(y1 - 10)),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3, cv2.LINE_AA)
-
-                # Draw the trapezoidal ROI on the frame
-                cv2.polylines(annotated_frame, [np.array(roi_vertices, dtype=np.int32)], isClosed=True,
-                              color=(255, 0, 0),
-                              thickness=2)
-                cv2.putText(annotated_frame, 'ROI: {}'.format(roi_vertices),
-                            (roi_vertices[0][0], roi_vertices[0][1] - 5),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 210), 2, cv2.LINE_AA)
-
-                # Draw the prohibited ROI on the frame
-                cv2.polylines(annotated_frame, [np.array(p_roi_vertices, dtype=np.int32)], isClosed=True,
-                              color=(0, 0, 255),
-                              thickness=2)
-                cv2.putText(annotated_frame, 'Prohibited ROI: {}'.format(p_roi_vertices),
-                            (p_roi_vertices[0][0], p_roi_vertices[0][1] - 5),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2, cv2.LINE_AA)
-
-                # Plot the tracks
-                for box, track_id in zip(boxes, track_ids):
+                for box, track_id, score in zip(boxes, track_ids, scores):
                     x, y, w, h = box
-                    track = track_history[track_id]
-                    track.append((float(x), float(y)))  # x, y center point
-                    if len(track) > 100:  # retain 90 tracks for 90 frames
-                        track.pop(0)
+                    center_point = (int(x + w / 2), int(y + h / 2))
 
-                    # Draw the tracking lines
-                    points = np.hstack(track).astype(np.int32).reshape((-1, 1, 2))
-                    cv2.polylines(annotated_frame, [points], isClosed=False, color=(230, 230, 230), thickness=5)
+                    if score >= threshold_vehicle:
+                        # Check if vehicle is inside the normal ROI
+                        if is_inside_trapezoid(center_point, roi_vertices):
+                            # Store that this vehicle has been inside the normal ROI
+                            track_history[track_id].append("N")
 
-                # TODO: Only check for vehicles crossing if the prohibited ROI is defined
-                # Check for vehicles crossing from roi_vertices to p_roi_vertices
-                for prev_box, prev_id, box, track_id in zip(prev_boxes, prev_track_ids, boxes, track_ids):
-                    prev_x, prev_y, prev_w, prev_h = prev_box
-                    prev_center = (prev_x + prev_w / 2, prev_y + prev_h / 2)
-                    x, y, w, h = box
-                    center = (x + w / 2, y + h / 2)
+                    # Check if the vehicle is now inside the prohibited ROI
+                    if is_inside_trapezoid(center_point, p_roi_vertices):
+                        # If the vehicle was previously in the normal ROI and now in the prohibited ROI
+                        if "N" in track_history[track_id] and track_id not in crossed_vehicles:
+                            print(f"El Vehiculo {track_id} cruzo desde el ROI Normal hacia el ROI Prohibido!")
+                            crossed_vehicles.add(track_id)  # Mark the vehicle as crossed
 
-                    # Check if the previous center was inside roi_vertices
-                    prev_inside_roi = is_inside_trapezoid(prev_box, roi_vertices)
+                # Draw the ROIs on the frame for visualization
+                cv2.polylines(annotated_frame, [np.array(roi_vertices, dtype=np.int32)], isClosed=True, color=(255, 0, 0), thickness=2)
+                cv2.polylines(annotated_frame, [np.array(p_roi_vertices, dtype=np.int32)], isClosed=True, color=(0, 0, 255), thickness=2)
 
-                    # Check if the current center is inside p_roi_vertices
-                    current_inside_p_roi = is_inside_trapezoid(box, p_roi_vertices)
 
-                    if prev_inside_roi and not current_inside_p_roi and prev_id not in crossed_vehicles:
-                        # Vehicle transitioned from roi_vertices to p_roi_vertices and hasn't been processed yet
-                        print(f"Vehicle with ID {prev_id} crossed from ROI to prohibited ROI.")
-                        crossed_vehicles.add(prev_id)
 
-                # Store current bounding boxes and track IDs for the next iteration
-                prev_boxes = boxes
-                prev_track_ids = track_ids
+                # NOTE: METRICS FOR VEHICLE DETECTION
+                # Get the elapsed time for processing the frame
+                processing_end_time = time.time()
 
-                # Display the annotated frame
-                cv2.imshow("YOLOv8 Tracking", annotated_frame)
+                # Calculate the elapsed time for processing the frame
+                elapsed_time_frame = processing_end_time - processing_start_time
+                # Calculate the output frame rate
+                output_frame_rate = 1 / elapsed_time_frame
+                # Calculate the ratio of the output frame rate to the input frame rate
+                frame_rate_ratio = output_frame_rate / input_fps
 
-                out.write(annotated_frame)
+                # Print the frame rate and elapsed time for each frame
+                print("Frame rate: {:.2f} frames per second".format(output_frame_rate))
+                # Results should be above 1 to keep up with the frame rate
+                print("Output/Input fps ratio: {:.2f}x".format(frame_rate_ratio))
+                print(f"Elapsed time: {elapsed_time_frame} seconds for frame #{frame_num}")
 
-            # Break the loop if 'q' is pressed
+                # TODO: Borrar esta parte del codigo en produccion
+                # Show the frame
+                cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
+
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
         else:
-            # Break the loop if the end of the video is reached
             break
 
-    # Release the video capture object and close the display window
     cap.release()
     cv2.destroyAllWindows()
+
 
 
 def video_to_html(video_path, start_frame, end_frame, playback_speed=None):

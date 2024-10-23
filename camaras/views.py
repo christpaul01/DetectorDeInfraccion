@@ -199,7 +199,7 @@ def stream_video_content(request, id_camara):
 @login_required
 def start_camara(request, id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
-    utilidades.start_detection(camara.id_camara)
+    utilidades.start_vehicle_detection(camara.id_camara)
     return redirect('/')
 
 @login_required
