@@ -1,4 +1,5 @@
 from datetime import datetime
+from threading import Thread
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, StreamingHttpResponse
@@ -199,7 +200,10 @@ def stream_video_content(request, id_camara):
 @login_required
 def start_camara(request, id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
-    utilidades.start_vehicle_detection(camara.id_camara)
+
+    # Start vehicle detection via a Thread
+    Thread(target=utilidades.start_vehicle_detection, args=(camara.id_camara,)).start()
+    # utilidades.start_vehicle_detection(camara.id_camara)
     return redirect('/')
 
 @login_required
