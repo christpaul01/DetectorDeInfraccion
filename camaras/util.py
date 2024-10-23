@@ -171,16 +171,12 @@ def start_detection(id_camara):
 
                 for result in results_H_custom.boxes.data.tolist():
                     x1, y1, x2, y2, score, class_id = result
-                    helmet_box = (x1, y1, x2, y2)
-                    # check if the bounding box is within the ROI
-                    if is_inside_trapezoid(helmet_box, roi_vertices):
-                        if score > thresholdHelmet and int(class_id) in helmets:
-                            # bounding_box = (x1, y1, x2, y2)
-                            # bounding_box = tuple(map(lambda x: round(x, 2), bounding_box))
-                            cv2.rectangle(annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 4)
-                            cv2.putText(annotated_frame, results_H_custom.names[int(class_id)].upper(),
-                                        (int(x1), int(y1 - 10)),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3, cv2.LINE_AA)
+                    #helmet_box = (x1, y1, x2, y2)
+                    if score > thresholdHelmet and int(class_id) in helmets:
+                        cv2.rectangle(annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 4)
+                        cv2.putText(annotated_frame, results_H_custom.names[int(class_id)].upper(),
+                                    (int(x1), int(y1 - 10)),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 3, cv2.LINE_AA)
 
                 # Draw the trapezoidal ROI on the frame
                 cv2.polylines(annotated_frame, [np.array(roi_vertices, dtype=np.int32)], isClosed=True,
@@ -203,7 +199,7 @@ def start_detection(id_camara):
                     x, y, w, h = box
                     track = track_history[track_id]
                     track.append((float(x), float(y)))  # x, y center point
-                    if len(track) > 30:  # retain 90 tracks for 90 frames
+                    if len(track) > 100:  # retain 90 tracks for 90 frames
                         track.pop(0)
 
                     # Draw the tracking lines
