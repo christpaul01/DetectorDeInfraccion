@@ -86,7 +86,7 @@ def start_vehicle_detection(id_camara):
 
 
     # Load YOLO models
-    model = YOLO('yolov8n.pt')
+    model = YOLO('yolo11s.pt')
 
     cap = cv2.VideoCapture(url_input)
     ret, frame = cap.read()
