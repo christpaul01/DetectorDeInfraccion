@@ -16,6 +16,7 @@ import time
 import torch
 import ast
 import base64
+from PIL import Image
 
 # For Streaming Video
 from django.http import StreamingHttpResponse
@@ -546,4 +547,54 @@ def get_roi_vertices(frame, window_name="Select ROI"):
 
     return roi_vertices
 
+def get_dominant_color(pil_img):
+    """
+    Returns the dominant color of an image as an RGB tuple.
 
+    Args:
+    - pil_img (PIL.Image): The PIL image from which to detect the color.
+
+    Returns:
+    - tuple: Dominant RGB color in the form (R, G, B).
+    """
+    img = pil_img.copy()
+    img = img.convert("RGB")
+    img = img.resize((1, 1), resample=0)  # Resize to 1x1 pixel for dominant color
+    dominant_color = img.getpixel((0, 0))
+    return dominant_color
+
+def detect_roi_dominant_color(image, vertices):
+    """
+    Detects the dominant color within the specified polygonal ROI in the image.
+
+    Args:
+    - image (np.array): The image frame where detection will be applied.
+    - vertices (list of tuples): List of (x, y) coordinates defining the vertices of the polygonal ROI.
+
+    Returns:
+    - str: RGB color in text format (e.g., "RGB(255, 0, 0)").
+    """
+
+    # Create a mask for the polygonal ROI
+    mask = np.zeros_like(image[:, :, 0])
+    cv2.fillPoly(mask, [np.array(vertices, np.int32)], 255)
+
+    # Get bounding box of the polygon to crop the masked region
+    x, y, w, h = cv2.boundingRect(np.array(vertices))
+    cropped_image = image[y:y+h, x:x+w]
+    cropped_mask = mask[y:y+h, x:x+w]
+
+    # Apply the mask to the cropped image to get only the ROI region
+    roi_image = cv2.bitwise_and(cropped_image, cropped_image, mask=cropped_mask)
+
+    # Convert the masked ROI region to a PIL image
+    pil_image = Image.fromarray(cv2.cvtColor(roi_image, cv2.COLOR_BGR2RGB))
+
+    # Get the dominant color in the ROI
+    dominant_color = get_dominant_color(pil_image)
+
+    # Format as RGB text
+    rgb_text = f"RGB{dominant_color}"
+    print(f"Detected RGB color: {rgb_text}")
+
+    return rgb_text
