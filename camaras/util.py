@@ -598,3 +598,28 @@ def detect_roi_dominant_color(image, vertices):
     print(f"Detected RGB color: {rgb_text}")
 
     return rgb_text
+
+def is_red_or_pink(rgb_text):
+    """
+    Determines if the RGB color in text format is within the red or pink color range.
+
+    Args:
+    - rgb_text (str): RGB color in text format (e.g., "RGB(255, 0, 0)").
+
+    Returns:
+    - bool: True if the color is within the red/pink range, False otherwise.
+    """
+
+    # Parse RGB values from the text format
+    rgb_values = rgb_text.strip("RGB()").split(", ")
+    r, g, b = int(rgb_values[0]), int(rgb_values[1]), int(rgb_values[2])
+
+    # Define the red/pink color range, including very light shades
+    is_red_or_pink = (
+        200 <= r <= 255 and      # High red values
+        0 <= g <= 255 and        # Expanded green range to include lighter shades
+        0 <= b <= 255            # Expanded blue range to include lighter shades
+    )
+
+    return is_red_or_pink
+
