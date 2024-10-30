@@ -1,20 +1,20 @@
 {% extends "./BaseCamaras.html" %}
- <p>Aqui podras configurar las camaras del sistema</p>
- <a href="http://localhost:8000/camaras">Configurar Camaras</a>
+<p>Aqui podras configurar las camaras del sistema</p>
+<a href="/camaras">Configurar Camaras</a>
 
 {% block body %}
 
-<h1> Creacion de Camaras</h1>
+<h1> Creación de Cámaras</h1>
 <div class="card">
     <div class="card-body">
         <form action="/registrarCamara/" method="POST"> {% csrf_token %}
             <div class="form-group">
-                <legend>ID de Camara</legend>
+                <legend>ID de Cámara</legend>
                 <input type="number" id="idCamara" name="idCamara" class="form-control" value="{{ next_id }}" readonly required>
             </div>
 
             <div class="form-group">
-                <legend>Nombre de Camara</legend>
+                <legend>Nombre de Cámara</legend>
                 <input type="text" id="nombreCamara" name="nombreCamara" class="form-control" placeholder="Nombre" maxlength="20" required>
             </div>
 
@@ -41,14 +41,14 @@
             <!-- Selección de tipos de ROI -->
             <div class="form-group">
                 <fieldset>
-                    <legend>Elegir tipos de Region de Interes (ROI):</legend>
+                    <legend>Elegir tipos de Región de Interés (ROI):</legend>
                     <div>
                         <input type="checkbox" id="ROINormal" name="ROINormal" disabled checked />
                         <label for="ROINormal">Normal</label>
                     </div>
 
                     <div>
-                        <input type="checkbox" id="ROIProhibido" name="ROIProhibido" />
+                        <input type="checkbox" id="ROIProhibido" name="ROIProhibido" onchange="toggleMaxROIInput()" />
                         <label for="ROIProhibido">Prohibido</label>
                     </div>
 
@@ -56,8 +56,13 @@
                         <input type="checkbox" id="LuzRoja" name="LuzRoja" />
                         <label for="LuzRoja">Luz Roja</label>
                     </div>
-
                 </fieldset>
+            </div>
+
+            <!-- Configuración de cantidad máxima de ROI prohibidos -->
+            <div class="form-group">
+                <label for="maxROIProhibido">Cantidad máxima de ROIs Prohibidos</label>
+                <input type="number" id="maxROIProhibido" name="maxROIProhibido" class="form-control" min="1" max="3" placeholder="Ingrese el límite" disabled required>
             </div>
 
             <div class="form-group">
@@ -67,6 +72,22 @@
     </div>
 </div>
 
+
+<!-- JavaScript para habilitar/deshabilitar la cantidad máxima de ROI Prohibido -->
+<script>
+    function toggleMaxROIInput() {
+        const roiProhibidoCheckbox = document.getElementById('ROIProhibido');
+        const maxROIInput = document.getElementById('maxROIProhibido');
+
+        if (roiProhibidoCheckbox.checked) {
+            maxROIInput.disabled = false;
+            maxROIInput.value = 1;  // Asignar el valor 1 cuando se selecciona ROI Prohibido
+        } else {
+            maxROIInput.disabled = true;
+            maxROIInput.value = '';  // Limpiar el valor cuando se deshabilita
+        }
+    }
+</script>
 
 
 {% endblock %}
