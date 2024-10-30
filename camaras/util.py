@@ -55,11 +55,9 @@ def start_vehicle_detection(id_camara):
 
     # Obtener el umbral de detección de vehículos desde la base de datos
     threshold_vehicle = camara.threshold_vehicle
-    if threshold_vehicle is None:
-        # Si no hay umbral en la cámara, buscar en la tabla de umbrales, FALLBACKS
-        threshold_vehicle = Umbral.objects.filter(nombre_umbral='Threshold_Vehicle').first().valor_umbral
-        if threshold_vehicle is None:
-            threshold_vehicle = 0.55  # Umbral por defecto
+    threshold_vehicle = (camara.threshold_vehicle
+                         or Umbral.objects.filter(nombre_umbral='Threshold_Vehicle').first().valor_umbral
+                         or 0.55)
 
     print(f"Trying to start detection from camera: {nombre}, url: {url_input}")
 
@@ -97,87 +95,120 @@ def start_vehicle_detection(id_camara):
     frame_time = 1 / input_fps
     frame_num = 0
 
-    # Load ROIs
-    roi_vertices = [(0, 0), (W, 0), (W, H), (0, H)]  # Default values in case no ROI found
-    p_roi_vertices = [(0, 0), (W, 0), (W, H), (0, H)]  # Default prohibited ROI
-
+    # Load Normal ROI
     try:
         roi_coordinates = ast.literal_eval(ROI.objects.get(id_camara=id_camara, tipo_roi='N').coordenadas)
         roi_vertices = [(x, y) for x, y in roi_coordinates]
     except ROI.DoesNotExist:
-        print("ROI not found, using default values")
+        roi_vertices = [(0, 0), (W, 0), (W, H), (0, H)]
 
+    # Load all Prohibited ROIs
+    prohibited_rois = []
+    for p_roi in ROI.objects.filter(id_camara=id_camara, tipo_roi='P'):
+        try:
+            p_roi_coords = ast.literal_eval(p_roi.coordenadas)
+            p_roi_vertices = [(x, y) for x, y in p_roi_coords]
+            prohibited_rois.append(p_roi_vertices)
+        except (ValueError, SyntaxError):
+            continue
+
+    # Load traffic light ROI
     try:
-        p_roi_coordenadas = ast.literal_eval(ROI.objects.get(id_camara=id_camara, tipo_roi='P').coordenadas)
-        p_roi_vertices = [(x, y) for x, y in p_roi_coordenadas]
+        tf_light_coordinates = ast.literal_eval(ROI.objects.get(id_camara=id_camara, tipo_roi='S').coordenadas)
+        tf_light_vertices = [(x, y) for x, y in tf_light_coordinates]
     except ROI.DoesNotExist:
-        print("Prohibited ROI not found, using default values")
+        tf_light_vertices = []
 
     crossed_vehicles = set()  # Track vehicles that have crossed
 
     while cap.isOpened():
         success, frame = cap.read()
-        if success:
-            frame_num += 1
-            processing_start_time = time.time()
+        if not success:
+            break
 
-            results = model.track(frame, persist=True, classes = vehicles, tracker="bytetrack.yaml")
+        frame_num += 1
+        processing_start_time = time.time()
 
-            if results[0].boxes.id is not None:
-                boxes = results[0].boxes.xywh.cpu().numpy().astype(int)
-                track_ids = results[0].boxes.id.cpu().numpy().astype(int)
-                scores = results[0].boxes.conf.cpu().numpy()
+        results = model.track(frame, persist=True, classes = vehicles, tracker="bytetrack.yaml")
 
-                annotated_frame = results[0].plot()
+        if results[0].boxes.id is not None:
+            boxes = results[0].boxes.xywh.cpu().numpy().astype(int)
+            track_ids = results[0].boxes.id.cpu().numpy().astype(int)
+            scores = results[0].boxes.conf.cpu().numpy()
 
-                for box, track_id, score in zip(boxes, track_ids, scores):
-                    x, y, w, h = box
-                    center_point = (int(x + w / 2), int(y + h / 2))
+            annotated_frame = results[0].plot()
 
-                    if score >= threshold_vehicle:
-                        # Check if vehicle is inside the normal ROI
-                        if is_inside_trapezoid(center_point, roi_vertices):
-                            # Store that this vehicle has been inside the normal ROI
-                            track_history[track_id].append("N")
+            # Draw Traffic Light ROI
+            if tf_light_vertices != []:
+                cv2.polylines(annotated_frame, [np.array(tf_light_vertices, dtype=np.int32)], isClosed=True,
+                              color=(0, 255, 0), thickness=1)
 
-                    # Check if the vehicle is now inside the prohibited ROI
-                    if is_inside_trapezoid(center_point, p_roi_vertices):
-                        # If the vehicle was previously in the normal ROI and now in the prohibited ROI
-                        if "N" in track_history[track_id] and track_id not in crossed_vehicles:
-                            print(f"El Vehiculo {track_id} cruzo desde el ROI Normal hacia el ROI Prohibido!")
-                            crossed_vehicles.add(track_id)  # Mark the vehicle as crossed
+                traffic_light_color = detect_roi_dominant_color(frame, tf_light_vertices)
+                tfl_is_red = is_red_or_pink(traffic_light_color)
 
-                # Draw the ROIs on the frame for visualization
-                cv2.polylines(annotated_frame, [np.array(roi_vertices, dtype=np.int32)], isClosed=True, color=(255, 0, 0), thickness=2)
+                cv2.putText(annotated_frame,
+                            'Traffic Light {} is red: {}'.format(traffic_light_color, tfl_is_red),
+                            (tf_light_vertices[0][0], tf_light_vertices[0][1] - 5),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 125), 2, cv2.LINE_AA)
+
+            for box, track_id, score in zip(boxes, track_ids, scores):
+                x, y, w, h = box
+                center_point = (int(x + w / 2), int(y + h / 2))
+
+                if score >= threshold_vehicle:
+                    # Check if vehicle is inside the normal ROI
+                    if is_inside_trapezoid(center_point, roi_vertices):
+                        # Store that this vehicle has been inside the normal ROI
+                        track_history[track_id].append("N")
+
+                # Check if the vehicle is in any prohibited ROI
+                for p_roi_vertices in prohibited_rois:
+                    if is_inside_trapezoid(center_point, p_roi_vertices) and "N" in track_history[track_id]:
+                        if track_id not in crossed_vehicles:
+                            if tf_light_vertices:
+                                # TODO: Check if the next two following line can safely be removed in different scenario
+                                traffic_light_color = detect_roi_dominant_color(frame, tf_light_vertices)
+                                tfl_is_red = is_red_or_pink(traffic_light_color)
+                                if tfl_is_red:
+                                    print(f"Vehiculo de ID # {track_id} cruzo del ROI Normal hacia un ROI Prohibido mientras que la luz estaba roja!")
+                                    crossed_vehicles.add(track_id)
+                            else:
+                                print(f"Vehiculo de ID # {track_id} cruzo del ROI Normal hacia un ROI Prohibido!")
+                                crossed_vehicles.add(track_id)
+
+            # Draw the ROIs on the frame for visualization
+            # Draw Normal ROI
+            cv2.polylines(annotated_frame, [np.array(roi_vertices, dtype=np.int32)], isClosed=True, color=(255, 0, 0),
+                          thickness=2)
+            # Draw each Prohibited ROI
+            for p_roi_vertices in prohibited_rois:
                 cv2.polylines(annotated_frame, [np.array(p_roi_vertices, dtype=np.int32)], isClosed=True, color=(0, 0, 255), thickness=2)
 
 
 
-                # NOTE: METRICS FOR VEHICLE DETECTION
-                # Get the elapsed time for processing the frame
-                processing_end_time = time.time()
+            # NOTE: METRICS FOR VEHICLE DETECTION
+            # Get the elapsed time for processing the frame
+            processing_end_time = time.time()
 
-                # Calculate the elapsed time for processing the frame
-                elapsed_time_frame = processing_end_time - processing_start_time
-                # Calculate the output frame rate
-                output_frame_rate = 1 / elapsed_time_frame
-                # Calculate the ratio of the output frame rate to the input frame rate
-                frame_rate_ratio = output_frame_rate / input_fps
+            # Calculate the elapsed time for processing the frame
+            elapsed_time_frame = processing_end_time - processing_start_time
+            # Calculate the output frame rate
+            output_frame_rate = 1 / elapsed_time_frame
+            # Calculate the ratio of the output frame rate to the input frame rate
+            frame_rate_ratio = output_frame_rate / input_fps
 
-                # Print the frame rate and elapsed time for each frame
-                print("Frame rate: {:.2f} frames per second".format(output_frame_rate))
-                # Results should be above 1 to keep up with the frame rate
-                print("Output/Input fps ratio: {:.2f}x".format(frame_rate_ratio))
-                print(f"Elapsed time: {elapsed_time_frame} seconds for frame #{frame_num}")
+            # Print the frame rate and elapsed time for each frame
+            print("Frame rate: {:.2f} frames per second".format(output_frame_rate))
+            # Results should be above 1 to keep up with the frame rate
+            print("Output/Input fps ratio: {:.2f}x".format(frame_rate_ratio))
+            print(f"Elapsed time: {elapsed_time_frame} seconds for frame #{frame_num}")
 
-                # TODO: Borrar esta parte del codigo en produccion
-                # Show the frame
-                cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
+            # TODO: Borrar esta parte del codigo en produccion
+            # Show the frame
+            cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
 
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
-        else:
-            break
 
     cap.release()
     cv2.destroyAllWindows()

@@ -348,10 +348,10 @@ def edicionCamara(request):
                             roi_p.delete()
             else:
                 if isROIProhibidoSelected:
-                    coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
-                    fecha_creacion = DateField(auto_now_add=True)
-                    ROI.objects.create(id_camara=camara, coordenadas=coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fecha_creacion)
-
+                    for i in range(maxROIProhibido):
+                        coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), f"Seleccione el ROI Prohibido # {i}")
+                        fecha_creacion = DateField(auto_now_add=True)
+                        ROI.objects.create(id_camara=camara, coordenadas=coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fecha_creacion)
             # Check if the camera has a traffic light ROI
             try:
                 roi_luz_roja = ROI.objects.get(id_camara=idCamara, tipo_roi='S')
