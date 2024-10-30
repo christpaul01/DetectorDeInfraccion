@@ -1,91 +1,111 @@
 {% extends "./BaseCamaras.html" %}
- <p>Aqui podras configurar las camaras del sistema</p>
- <a href="/camaras">Configurar Camaras</a>
+<p>Aqui podras configurar las camaras del sistema</p>
+<a href="/camaras">Configurar Camaras</a>
 
 {% block body %}
 <div class="row">
     <div class="col-md-4 offset-md-4"></div>
-     <h1>Edición de Cámaras</h1>
-          <div class="card">
-              <div class="card-body" >
-                  <form action="/edicionCamara/" method="POST">
-                      {% csrf_token %}
-                      <div class="form-group">
-                          <input type="text" id="idCamara" name="idCamara" value="{{camara.id_camara}}" class="form-control" readonly required>
-                      </div>
-                      <div class="form-group">
-                          <input type="text" id="nombreCamara" name="nombreCamara" value="{{camara.nombre_camara}}" class="form-control" placeholder="Nombre" maxlength="20" required>
-                      </div>
-                      <div class="form-group">
-                        <label for="estadoCamara">Estado de la Cámara</label>
-                        <select class="form-control" id="estadoCamara" name="estadoCamara" required>
-                            {% if camara.estado_camara == 'Activado' %}
-                            <option value="Activado" selected>Activado</option>
-                            <option value="Desactivado">Desactivado</option>
-                            {% else %}
-                            <option value="Activado">Activado</option>
-                            <option value="Desactivado" selected>Desactivado</option>
-                            {% endif %}
-                        </select>
+    <h1>Edición de Cámaras</h1>
+    <div class="card">
+        <div class="card-body">
+            <form action="/edicionCamara/" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="text" id="idCamara" name="idCamara" value="{{camara.id_camara}}" class="form-control" readonly required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="nombreCamara" name="nombreCamara" value="{{camara.nombre_camara}}" class="form-control" placeholder="Nombre" maxlength="20" required>
+                </div>
+                <div class="form-group">
+                    <label for="estadoCamara">Estado de la Cámara</label>
+                    <select class="form-control" id="estadoCamara" name="estadoCamara" required>
+                        {% if camara.estado_camara == 'Activado' %}
+                        <option value="Activado" selected>Activado</option>
+                        <option value="Desactivado">Desactivado</option>
+                        {% else %}
+                        <option value="Activado">Activado</option>
+                        <option value="Desactivado" selected>Desactivado</option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="resolucionCamara" name="resolucionCamara" value="{{camara.resolucion_camara}}" class="form-control" placeholder="Resolución" minlength="6" maxlength="10" readonly required>
+                </div>
+
+                <!-- Umbrales de detección (thresholds) -->
+                <fieldset>
+                    <legend>Umbrales de Detección (Thresholds):</legend>
+                    <div class="form-group">
+                        <label for="thresholdVehicle">Umbral para Vehículos</label>
+                        <input type="number" step="0.01" min="0.5" max="0.99" id="thresholdVehicle" name="thresholdVehicle" value="{{camara.threshold_vehicle}}" class="form-control" required>
                     </div>
+                    <div class="form-group">
+                        <label for="thresholdLicensePlate">Umbral para Matrículas</label>
+                        <input type="number" step="0.01" min="0.5" max="0.99" id="thresholdLicensePlate" name="thresholdLicensePlate" value="{{camara.threshold_license_plate}}" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="thresholdHelmet">Umbral para Cascos</label>
+                        <input type="number" step="0.01" min="0.5" max="0.99" id="thresholdHelmet" name="thresholdHelmet" value="{{camara.threshold_helmet}}" class="form-control" required>
+                    </div>
+                </fieldset>
 
-                      <div class="form-group">
-                          <input type="text" id="resolucionCamara" name="resolucionCamara" value="{{camara.resolucion_camara}}" class="form-control" placeholder="Resolución" minlength="6" maxlength="10" readonly required>
-                      </div>
-
-                      <!-- Umbrales de detección (thresholds) -->
-                      <fieldset>
-                        <legend>Umbrales de Detección (Thresholds):</legend>
-
-                        <div class="form-group">
-                            <label for="thresholdVehicle">Umbral para Vehículos</label>
-                            <input type="number" step="0.01" min="0.5" max="0.99" id="thresholdVehicle" name="thresholdVehicle" value="{{camara.threshold_vehicle}}" class="form-control" required>
+                <div class="form-group">
+                    <fieldset>
+                        <legend>Elegir tipos de Región de Interés (ROI):</legend>
+                        <div>
+                            <input type="checkbox" id="ROINormal" name="ROINormal" disabled checked />
+                            <label for="ROINormal">Normal</label>
                         </div>
-
-                        <div class="form-group">
-                            <label for="thresholdLicensePlate">Umbral para Matrículas</label>
-                            <input type="number" step="0.01" min="0.5" max="0.99" id="thresholdLicensePlate" name="thresholdLicensePlate" value="{{camara.threshold_license_plate}}" class="form-control" required>
+                        <div>
+                            <input type="checkbox" id="ROIProhibido" name="ROIProhibido" {% if has_roi_p %} checked {% endif %} onchange="toggleMaxROIInput()" />
+                            <label for="ROIProhibido">Prohibido</label>
                         </div>
-
-                        <div class="form-group">
-                            <label for="thresholdHelmet">Umbral para Cascos</label>
-                            <input type="number" step="0.01" min="0.5" max="0.99" id="thresholdHelmet" name="thresholdHelmet" value="{{camara.threshold_helmet}}" class="form-control" required>
+                        <div>
+                            <input type="checkbox" id="LuzRoja" name="LuzRoja" {% if has_luz_roja %} checked {% endif %}/>
+                            <label for="LuzRoja">Luz Roja</label>
                         </div>
-                      </fieldset>
+                    </fieldset>
+                </div>
 
-                      <div class="form-group">
-                            <fieldset>
-                                  <legend>Elegir tipos de Región de Interés (ROI):</legend>
-                                  <div>
-                                    <input type="checkbox" id="ROINormal" name="ROINormal" disabled checked />
-                                    <label for="ROINormal">Normal</label>
-                                  </div>
+                <!-- Configuración de cantidad máxima de ROI prohibidos -->
+                <div class="form-group">
+                    <label for="maxROIProhibido">Cantidad máxima de ROIs Prohibidos</label>
+                    <input type="number" id="maxROIProhibido" name="maxROIProhibido" class="form-control" min="1" max="3" placeholder="Ingrese el límite" disabled required>
+                </div>
 
-                                  <div>
-                                    <input type="checkbox" id="ROIProhibido" name="ROIProhibido" {% if has_roi_p %} checked {% endif %}/>
-                                    <label for="ROIProhibido">Prohibido</label>
-                                  </div>
+                <div class="form-group">
+                    <label for="editarROI">¿Editar ROI de la Cámara?</label>
+                    <select class="form-control" id="editarROI" name="editarROI" required>
+                        <option value="No" SELECTED>No</option>
+                        <option value="Si">Sí</option>
+                    </select>
+                </div>
 
-                                    <div>
-                                        <input type="checkbox" id="LuzRoja" name="LuzRoja" {% if has_luz_roja %} checked {% endif %}/>
-                                        <label for="LuzRoja">Luz Roja</label>
-                                    </div>
-                            </fieldset>
-                      </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                      <div class="form-group">
-                            <label for="editarROI">¿Editar ROI de la Cámara?</label>
-                            <select class="form-control" id="editarROI" name="editarROI" required>
-                                <option value="No" SELECTED>No</option>
-                                <option value="Si">Sí</option>
-                            </select>
-                      </div>
+<!-- JavaScript para habilitar/deshabilitar la cantidad máxima de ROI Prohibido -->
+<script>
+    function toggleMaxROIInput() {
+        const roiProhibidoCheckbox = document.getElementById('ROIProhibido');
+        const maxROIInput = document.getElementById('maxROIProhibido');
 
-                      <div class="form-group">
-                           <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
-                      </div>
-                  </form>
-              </div>
-          </div>
-      </div>
+        if (roiProhibidoCheckbox.checked) {
+            maxROIInput.disabled = false;
+            maxROIInput.value = {{ cant_roi_p }};  // Asignar el valor 1 cuando se selecciona ROI Prohibido
+        } else {
+            maxROIInput.disabled = true;
+            maxROIInput.value = '';  // Limpiar el valor cuando se deshabilita
+        }
+    }
+
+    // Llama a la función al cargar la página para verificar si ROI Prohibido ya está seleccionado
+    document.addEventListener("DOMContentLoaded", toggleMaxROIInput);
+</script>
 {% endblock %}

@@ -84,6 +84,7 @@ def registarCamara(request):
     isROINormalSelected = request.POST.get('ROINormal', True)
     isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
     isLuzRojaSelected = request.POST.get('LuzRoja', False)
+    maxROIProhibido = int(request.POST.get('maxROIProhibido', 1))
 
     #resolucionCamara = request.POST['resolucionCamara']
 
@@ -139,9 +140,14 @@ def registarCamara(request):
     if isROIProhibidoSelected:
         fechaCreacion = datetime.now()
         print("ROI Prohibido seleccionado")
-        coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Prohibido")
-        ROI.objects.create(id_camara=camaraInstance, coordenadas= coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fechaCreacion)
-
+        for i in range(maxROIProhibido):
+            print(f"Seleccionando ROI Prohibido {i + 1}")
+            coordenadas_p = utilidades.get_roi_vertices(
+                utilidades.get_frame_from_video(url_video_path), f"Seleccione el ROI Prohibido {i + 1}")
+            ROI.objects.create(
+                id_camara=camaraInstance, coordenadas=coordenadas_p,
+                estado_roi='A', tipo_roi='P', fecha_creacion=fechaCreacion
+            )
     if isLuzRojaSelected:
         fechaCreacion = datetime.now()
         print("Luz Roja seleccionado")
@@ -217,10 +223,12 @@ def editarCamara(request,id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
         has_roi_n = ROI.objects.filter(id_camara=id_camara, tipo_roi='N').exists()
-        has_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').exists()
+        cant_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').count()
+        has_roi_p = cant_roi_p > 0
         has_luz_roja = ROI.objects.filter(id_camara=id_camara, tipo_roi='S').exists()
 
-        context = {"camara": camara, "has_roi_n": has_roi_n, "has_luz_roja": has_luz_roja, "has_roi_p": has_roi_p}
+
+        context = {"camara": camara, "has_roi_n": has_roi_n, "has_luz_roja": has_luz_roja, "has_roi_p": has_roi_p, "cant_roi_p": cant_roi_p}
 
         return render(request, 'editarCamara.html', context)
     except Camara.DoesNotExist:
@@ -239,10 +247,12 @@ def detallesCamara(request, id_camara):
             direccion_camara = direccion_camara.nombre_direccion
         else:
             direccion_camara = None
-        has_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').first() is not None
+
+        cant_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').count()
+        has_roi_p = cant_roi_p > 0
         has_luz_roja = ROI.objects.filter(id_camara=id_camara, tipo_roi='S').first() is not None
 
-        context = {"camara": camara, "has_roi_p": has_roi_p, "has_luz_roja":has_luz_roja, "direccion": direccion_camara}
+        context = {"camara": camara, "has_roi_p": has_roi_p, "has_luz_roja":has_luz_roja, "cant_roi_p": cant_roi_p, "direccion": direccion_camara}
         return render(request, 'detallesCamara.html', context)
     except Camara.DoesNotExist:
         error_type = "Error de procesamiento"
@@ -267,6 +277,7 @@ def edicionCamara(request):
         threshold_vehicle = request.POST['thresholdVehicle']
         threshold_license_plate = request.POST['thresholdLicensePlate']
         threshold_helmet = request.POST['thresholdHelmet']
+        maxROIProhibido = int(request.POST.get('maxROIProhibido', 1))
 
 
         isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
@@ -303,21 +314,38 @@ def edicionCamara(request):
 
             # Check if the camera has a prohibited ROI
             try:
-                roi_p = ROI.objects.get(id_camara=idCamara, tipo_roi='P')
+                list_id_roi_p = ROI.objects.filter(id_camara=idCamara, tipo_roi='P').values_list('id_roi', flat=True)
             except ROI.DoesNotExist:
-                roi_p = None
+                list_id_roi_p = None
 
-            if roi_p:
+            if list_id_roi_p:
                 if is_roi_edit:
                     if isROIProhibidoSelected:
-                        coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
-                        roi_p.coordenadas = coordenadas_p
-                        roi_p.fecha_creacion = datetime.now()
-                        roi_p.save()
+                        # Get all the ID of the ROI Prohibido
+                        list_id_roi_p = ROI.objects.filter(id_camara=idCamara, tipo_roi='P').values_list('id_roi', flat=True)
+                        # Modify all the existing ROIs Prohibidos
+                        if maxROIProhibido == len(list_id_roi_p):
+                            for id_roi_p in list_id_roi_p:
+                                roi_p = ROI.objects.get(id_roi=id_roi_p)
+                                coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
+                                roi_p.coordenadas = coordenadas_p
+                                roi_p.fecha_creacion = datetime.now()
+                                roi_p.save()
+                        else:
+                            for id_roi_p in list_id_roi_p:
+                                roi_p = ROI.objects.get(id_roi=id_roi_p)
+                                roi_p.delete()
+                            for i in range(maxROIProhibido):
+                                coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), f"Seleccione el ROI Prohibido # {i}")
+                                fecha_creacion = DateField(auto_now_add=True)
+                                ROI.objects.create(id_camara=camara, coordenadas=coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fecha_creacion)
                 else:
                     if not isROIProhibidoSelected:
                         # TODO: Modificar el estado del ROI a inactivo
-                        roi_p.delete()
+                        # Delete all the existing ROIs Prohibidos
+                        for id_roi_p in list_id_roi_p:
+                            roi_p = ROI.objects.get(id_roi=id_roi_p)
+                            roi_p.delete()
             else:
                 if isROIProhibidoSelected:
                     coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
