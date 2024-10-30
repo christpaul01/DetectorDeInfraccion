@@ -214,8 +214,8 @@ def start_camara(request, id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
 
     # Start vehicle detection via a Thread
-    Thread(target=utilidades.start_vehicle_detection, args=(camara.id_camara,)).start()
-    # utilidades.start_vehicle_detection(camara.id_camara)
+    #Thread(target=utilidades.start_vehicle_detection, args=(camara.id_camara,)).start()
+    utilidades.start_vehicle_detection(camara.id_camara)
     return redirect('/')
 
 @login_required
@@ -368,7 +368,11 @@ def edicionCamara(request):
                 else:
                     if not isLuzRojaSelected:
                         roi_luz_roja.delete()
-
+            else:
+                if isLuzRojaSelected:
+                    coordenadas_s = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI de la Luz Roja")
+                    fecha_creacion = DateField(auto_now_add=True)
+                    ROI.objects.create(id_camara=camara, coordenadas=coordenadas_s, estado_roi='A', tipo_roi='S', fecha_creacion=fecha_creacion)
             return redirect('/')
         except Camara.DoesNotExist:
             error_type = "Error de procesamiento"

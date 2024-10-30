@@ -43,10 +43,14 @@ def start_vehicle_detection(id_camara):
     camara = Camara.objects.get(id_camara=id_camara)
     nombre = camara.nombre_camara
     url_input = camara.url_camara
+    # make a url output based on the url input with out at the end of the name and the time stamp
+    url_output = url_input.split(".")[0] + str(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) + "_out." + url_input.split(".")[1]
     track_history = defaultdict(list)
     # Initialize variables for frame processing time
     processing_start_time = time.time()
     processing_end_time = time.time()
+
+
 
     vehicles = TipoVehiculo.objects.all().values_list('id_tipo_vehiculo', flat=True)
     if vehicles is None:
@@ -94,6 +98,10 @@ def start_vehicle_detection(id_camara):
     # Calculate the time between frames to process
     frame_time = 1 / input_fps
     frame_num = 0
+
+    # Create a video writer object to save the output video in a MP4 file
+    out = cv2.VideoWriter(url_output, cv2.VideoWriter_fourcc(*'MP4V'), int(input_fps), (W, H))
+
 
     # Load Normal ROI
     try:
@@ -206,6 +214,8 @@ def start_vehicle_detection(id_camara):
             # TODO: Borrar esta parte del codigo en produccion
             # Show the frame
             cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
+
+            out.write(annotated_frame)
 
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
