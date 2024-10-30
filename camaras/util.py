@@ -601,7 +601,9 @@ def detect_roi_dominant_color(image, vertices):
 
 def is_red_or_pink(rgb_text):
     """
-    Determines if the RGB color in text format is within the red or pink color range.
+    Determines if the RGB color in text format is within the red or pink color range,
+    so it can properly identify when the traffic lights is red given any situation
+    (night or day).
 
     Args:
     - rgb_text (str): RGB color in text format (e.g., "RGB(255, 0, 0)").
