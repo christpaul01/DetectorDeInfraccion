@@ -45,6 +45,7 @@ class ROI(models.Model):
     TIPO_ROI_CHOICES = [
         ('N', 'Normal'),
         ('P', 'Prohibido'),
+        ('S', 'Semáforo'),
     ]
     ESTADO_ROI_CHOICES = [
         ('A', 'Activo'),

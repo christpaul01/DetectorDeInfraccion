@@ -83,6 +83,7 @@ def registarCamara(request):
 
     isROINormalSelected = request.POST.get('ROINormal', True)
     isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
+    isLuzRojaSelected = request.POST.get('LuzRoja', False)
 
     #resolucionCamara = request.POST['resolucionCamara']
 
@@ -141,6 +142,11 @@ def registarCamara(request):
         coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI Prohibido")
         ROI.objects.create(id_camara=camaraInstance, coordenadas= coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fechaCreacion)
 
+    if isLuzRojaSelected:
+        fechaCreacion = datetime.now()
+        print("Luz Roja seleccionado")
+        coordenadas_s = utilidades.get_roi_vertices(utilidades.get_frame_from_video(url_video_path), "Seleccione el ROI de la Luz Roja")
+        ROI.objects.create(id_camara=camaraInstance, coordenadas=coordenadas_s, estado_roi='A', tipo_roi='S', fecha_creacion=fechaCreacion)
 
     return redirect('/')
 
@@ -212,7 +218,9 @@ def editarCamara(request,id_camara):
         camara = Camara.objects.get(id_camara=id_camara)
         has_roi_n = ROI.objects.filter(id_camara=id_camara, tipo_roi='N').exists()
         has_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').exists()
-        context = {"camara": camara, "has_roi_n": has_roi_n, "has_roi_p": has_roi_p}
+        has_luz_roja = ROI.objects.filter(id_camara=id_camara, tipo_roi='S').exists()
+
+        context = {"camara": camara, "has_roi_n": has_roi_n, "has_luz_roja": has_luz_roja, "has_roi_p": has_roi_p}
 
         return render(request, 'editarCamara.html', context)
     except Camara.DoesNotExist:
@@ -232,8 +240,9 @@ def detallesCamara(request, id_camara):
         else:
             direccion_camara = None
         has_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').first() is not None
+        has_luz_roja = ROI.objects.filter(id_camara=id_camara, tipo_roi='S').first() is not None
 
-        context = {"camara": camara, "has_roi_p": has_roi_p, "direccion": direccion_camara}
+        context = {"camara": camara, "has_roi_p": has_roi_p, "has_luz_roja":has_luz_roja, "direccion": direccion_camara}
         return render(request, 'detallesCamara.html', context)
     except Camara.DoesNotExist:
         error_type = "Error de procesamiento"
@@ -259,7 +268,9 @@ def edicionCamara(request):
         threshold_license_plate = request.POST['thresholdLicensePlate']
         threshold_helmet = request.POST['thresholdHelmet']
 
+
         isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
+        isLuzRojaSelected = request.POST.get('LuzRoja', False)
         is_roi_edit = request.POST.get('editarROI') == 'Si'
         video_path = Camara.objects.get(id_camara=idCamara).url_camara
 
@@ -273,6 +284,7 @@ def edicionCamara(request):
             camara.threshold_helmet = threshold_helmet
             camara.save()
 
+            # Check if the camera has a normal ROI
             try:
                 roi_n = ROI.objects.get(id_camara=idCamara, tipo_roi='N')
             except ROI.DoesNotExist:
@@ -289,7 +301,7 @@ def edicionCamara(request):
                 fecha_creacion = DateField(auto_now_add=True)
                 ROI.objects.create(id_camara=camara, coordenadas=coordenadas_n, estado_roi='A', tipo_roi='N', fecha_creacion=fecha_creacion)
 
-
+            # Check if the camera has a prohibited ROI
             try:
                 roi_p = ROI.objects.get(id_camara=idCamara, tipo_roi='P')
             except ROI.DoesNotExist:
@@ -311,6 +323,23 @@ def edicionCamara(request):
                     coordenadas_p = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI Prohibido")
                     fecha_creacion = DateField(auto_now_add=True)
                     ROI.objects.create(id_camara=camara, coordenadas=coordenadas_p, estado_roi='A', tipo_roi='P', fecha_creacion=fecha_creacion)
+
+            # Check if the camera has a traffic light ROI
+            try:
+                roi_luz_roja = ROI.objects.get(id_camara=idCamara, tipo_roi='S')
+            except ROI.DoesNotExist:
+                roi_luz_roja = None
+
+            if roi_luz_roja:
+                if is_roi_edit:
+                    if isLuzRojaSelected:
+                        coordenadas_s = utilidades.get_roi_vertices(utilidades.get_frame_from_video(video_path), "Seleccione el ROI de la Luz Roja")
+                        roi_luz_roja.coordenadas = coordenadas_s
+                        roi_luz_roja.fecha_creacion = datetime.now()
+                        roi_luz_roja.save()
+                else:
+                    if not isLuzRojaSelected:
+                        roi_luz_roja.delete()
 
             return redirect('/')
         except Camara.DoesNotExist:
