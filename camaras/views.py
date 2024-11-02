@@ -3,10 +3,6 @@ from threading import Thread
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, StreamingHttpResponse
-from django.template import loader
-from torch.distributed.pipeline.sync.skip.portal import Context
-from torchgen.utils import context
-
 from .forms import CustomUserCreationForm  # Import the custom form
 
 from .models import Camara, Direccion, ROI, Infraccion
