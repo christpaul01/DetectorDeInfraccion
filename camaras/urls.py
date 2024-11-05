@@ -8,6 +8,7 @@ urlpatterns = [
     # path('camaras/', views.camaras, name='camaras'),
     path('iniciarCamara/<id_camara>', views.start_camara),
     path('detenerCamara/<id_camara>', views.stop_camara),
+    path('checkThreadStatus/<int:id_camara>/', views.check_thread_status, name='check_thread_status'),
     path('nuevaCamara/', views.nuevaCamara),
     path('registrarCamara/', views.registarCamara),
     path('editarCamara/<id_camara>', views.editarCamara),

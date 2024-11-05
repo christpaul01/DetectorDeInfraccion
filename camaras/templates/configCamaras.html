@@ -101,13 +101,11 @@
                   <td>{{ c.camara.estado_camara }}</td>
                   <td>{{ c.camara.resolucion_camara }}</td>
                   <td>
-                    {% if c.esta_activa %}
-                      <!-- Button for stopping the camera when active -->
-                      <a href="detenerCamara/{{ c.camara.id_camara }}" class="btn btn-danger btn-sm">Detener</a>
-                    {% else %}
-                      <!-- Button for starting the camera when inactive -->
-                      <a href="iniciarCamara/{{ c.camara.id_camara }}" class="btn btn-success btn-sm">Iniciar</a>
-                    {% endif %}
+                    <a id="camara-btn-{{ c.camara.id_camara }}"
+                       href="{% if c.esta_activa %}detenerCamara/{{ c.camara.id_camara }}{% else %}iniciarCamara/{{ c.camara.id_camara }}{% endif %}"
+                       class="btn btn-sm {% if c.esta_activa %}btn-danger{% else %}btn-success{% endif %}">
+                      {% if c.esta_activa %}Detener{% else %}Iniciar{% endif %}
+                    </a>
                   </td>
                   <td><a href="stream/{{ c.camara.id_camara }}" class="btn btn-sm btn-outline-info">Stream</a></td>
                   <td><a href="detallesCamara/{{ c.camara.id_camara }}" class="btn btn-sm btn-outline-primary">Detalles</a></td>
@@ -118,23 +116,60 @@
             </table>
 
 
+
         </div>
       </div>
  </div>
 
     <!-- JavaScript para habilitar/deshabilitar la cantidad máxima de ROI Prohibido -->
-<script>
-    function toggleMaxROIInput() {
-        const roiProhibidoCheckbox = document.getElementById('ROIProhibido');
-        const maxROIInput = document.getElementById('maxROIProhibido');
+    <script>
+        function toggleMaxROIInput() {
+            const roiProhibidoCheckbox = document.getElementById('ROIProhibido');
+            const maxROIInput = document.getElementById('maxROIProhibido');
 
-        if (roiProhibidoCheckbox.checked) {
-            maxROIInput.disabled = false;
-            maxROIInput.value = 1;  // Asignar el valor 1 cuando se selecciona ROI Prohibido
-        } else {
-            maxROIInput.disabled = true;
-            maxROIInput.value = '';  // Limpiar el valor cuando se deshabilita
+            if (roiProhibidoCheckbox.checked) {
+                maxROIInput.disabled = false;
+                maxROIInput.value = 1;  // Asignar el valor 1 cuando se selecciona ROI Prohibido
+            } else {
+                maxROIInput.disabled = true;
+                maxROIInput.value = '';  // Limpiar el valor cuando se deshabilita
+            }
         }
-    }
+    </script>
+
+
+<script>
+  // Function to check if the camera thread is still active
+  function checkCameraStatus(idCamara) {
+      fetch(`/checkThreadStatus/${idCamara}/`)
+          .then(response => response.json())
+          .then(data => {
+              let button = document.querySelector(`#camara-btn-${idCamara}`);
+
+              if (data.is_active) {
+                  // If active, show the "Detener" button
+                  button.classList.remove('btn-success');
+                  button.classList.add('btn-danger');
+                  button.innerText = 'Detener';
+                  button.href = `detenerCamara/${idCamara}`;
+              } else {
+                  // If not active, show the "Iniciar" button
+                  button.classList.remove('btn-danger');
+                  button.classList.add('btn-success');
+                  button.innerText = 'Iniciar';
+                  button.href = `iniciarCamara/${idCamara}`;
+              }
+          });
+  }
+
+  // Periodically check the status of all cameras
+  setInterval(function() {
+      {% for c in camaras_estado %}
+          checkCameraStatus({{ c.camara.id_camara }});
+      {% endfor %}
+  }, 5000);  // Check every 5 seconds
 </script>
+
+
+
 {% endblock %}

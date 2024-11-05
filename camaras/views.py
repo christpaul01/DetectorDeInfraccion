@@ -20,6 +20,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
 
+from django.http import JsonResponse
+
 
 
 def get_next_camera_id():
@@ -237,6 +239,16 @@ def stop_camara(request, id_camara):
     utilidades.detener_hilo_camara(camara.id_camara)
     return redirect('/')
 
+
+def check_thread_status(request, id_camara):
+    # Assuming you have a function that can check if the thread is still running
+    thread_status = utilidades.is_thread_running(id_camara)
+
+    #print(f"Thread status for camera {id_camara}: {thread_status}")
+
+    return JsonResponse({
+        'is_active': thread_status
+    })
 
 @login_required
 def editarCamara(request,id_camara):
