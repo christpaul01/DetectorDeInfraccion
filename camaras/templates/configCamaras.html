@@ -82,35 +82,42 @@
       <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
           <h1>Listado de Camaras</h1>
         <div class="table-responsive py-2">
+
             <table class="table table-striped">
               <thead>
                 <tr>
-{#                  <th>#</th>#}
                   <th>ID</th>
                   <th>Nombre</th>
                   <th>Estado</th>
                   <th>Resolución</th>
-                  <th colspan="4">Opciones</th>
+                  <th colspan="3">Opciones</th>
                 </tr>
-             </thead>
-             <tbody>
-                 {% for c in camaras %}
-                 <tr>
-                       <td>{{c.id_camara}}</td>
-                       <td>{{c.nombre_camara}}</td>
-                       <td>{{c.estado_camara}}</td>
-                       <td>{{c.resolucion_camara}}</td>
-                        <td><a href="stream/{{c.id_camara}}" class="btn btn-sm btn-outline-info">Stream</a> </td>
-                        <td><a href="iniciarCamara/{{c.id_camara}}" class="btn btn-success btn-sm btnIniciar">Iniciar</a> </td>
-                        <td><a href="detallesCamara/{{c.id_camara}}" class="btn btn-sm btn-outline-primary">Detalles</a> </td>
-{#                       <td><a href="editarCamara/{{c.id_camara}}" class="btn btn-info">Editar</a> </td>#}
-                       <td><a href="eliminarCamara/{{c.id_camara}}" class="btn btn-outline-danger btn-sm btnEliminacion">Eliminar</a> </td>
+              </thead>
+              <tbody>
+                {% for c in camaras_estado %}
+                <tr>
+                  <td>{{ c.camara.id_camara }}</td>
+                  <td>{{ c.camara.nombre_camara }}</td>
+                  <td>{{ c.camara.estado_camara }}</td>
+                  <td>{{ c.camara.resolucion_camara }}</td>
+                  <td>
+                    {% if c.esta_activa %}
+                      <!-- Button for stopping the camera when active -->
+                      <a href="detenerCamara/{{ c.camara.id_camara }}" class="btn btn-danger btn-sm">Detener</a>
+                    {% else %}
+                      <!-- Button for starting the camera when inactive -->
+                      <a href="iniciarCamara/{{ c.camara.id_camara }}" class="btn btn-success btn-sm">Iniciar</a>
+                    {% endif %}
+                  </td>
+                  <td><a href="stream/{{ c.camara.id_camara }}" class="btn btn-sm btn-outline-info">Stream</a></td>
+                  <td><a href="detallesCamara/{{ c.camara.id_camara }}" class="btn btn-sm btn-outline-primary">Detalles</a></td>
+                  <td><a href="eliminarCamara/{{ c.camara.id_camara }}" class="btn btn-outline-danger btn-sm">Eliminar</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
 
 
-                 </tr>
-                 {%  endfor %}
-             </tbody>
-          </table>
         </div>
       </div>
  </div>

@@ -42,14 +42,31 @@ def get_next_direccion_id():
     else:
         return 1
 
+# def home(request):
+#     camaras = utilidades.get_camaras()
+#     #camaras = Camara.objects.all()
+#     next_id = get_next_camera_id()
+#     direcciones = Direccion.objects.all()
+#     context = {"camaras": camaras, "next_id": next_id, "direcciones": direcciones}
+#     return render(request, "configCamaras.html", context)
+
+
 def home(request):
     camaras = utilidades.get_camaras()
-    #camaras = Camara.objects.all()
     next_id = get_next_camera_id()
     direcciones = Direccion.objects.all()
-    context = {"camaras": camaras, "next_id": next_id, "direcciones": direcciones}
-    return render(request, "configCamaras.html", context)
 
+    # Verificar qué cámaras están activas
+    camaras_estado = []
+    for camara in camaras:
+        esta_activa = camara.id_camara in utilidades.active_threads and utilidades.active_threads[camara.id_camara].is_alive()
+        camaras_estado.append({
+            "camara": camara,
+            "esta_activa": esta_activa
+        })
+
+    context = {"camaras_estado": camaras_estado, "next_id": next_id, "direcciones": direcciones}
+    return render(request, "configCamaras.html", context)
 
 # Bloque Camaras
 @login_required
@@ -211,8 +228,15 @@ def start_camara(request, id_camara):
 
     # Start vehicle detection via a Thread
     #Thread(target=utilidades.start_vehicle_detection, args=(camara.id_camara,)).start()
-    utilidades.start_vehicle_detection(camara.id_camara)
+    utilidades.iniciar_hilo_camara(camara.id_camara)
     return redirect('/')
+
+@login_required
+def stop_camara(request, id_camara):
+    camara = Camara.objects.get(id_camara=id_camara)
+    utilidades.detener_hilo_camara(camara.id_camara)
+    return redirect('/')
+
 
 @login_required
 def editarCamara(request,id_camara):

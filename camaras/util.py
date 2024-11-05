@@ -4,11 +4,6 @@ import os
 import tkinter as tk
 from collections import defaultdict
 from tkinter import filedialog
-
-from jupyter_client.consoleapp import classes
-from sympy.categories import Object
-from torch.nn.functional import threshold
-# import for yolo model
 from ultralytics import YOLO
 import cv2
 import numpy as np
@@ -23,6 +18,27 @@ from django.http import StreamingHttpResponse
 
 from .models import Camara, Direccion, ROI, TipoVehiculo, Umbral
 
+from threading import Thread
+
+# Diccionario para almacenar hilos activos de las cámaras
+active_threads = {}
+
+
+def iniciar_hilo_camara(id_camara):
+    if id_camara not in active_threads or not active_threads[id_camara].is_alive():
+        # Crear y guardar el hilo en el diccionario si no está activo
+        hilo = Thread(target=start_vehicle_detection, args=(id_camara,))
+        hilo.start()
+        active_threads[id_camara] = hilo
+    else:
+        print(f"La cámara {id_camara} ya tiene un hilo activo.")
+
+
+def detener_hilo_camara(id_camara):
+    # Implementar la lógica para detener el hilo, si es necesario
+    if id_camara in active_threads:
+        # Terminar la captura o cerrar el hilo
+        active_threads.pop(id_camara, None)  # Remover del diccionario si el hilo se cierra
 
 def get_camaras():
     """
