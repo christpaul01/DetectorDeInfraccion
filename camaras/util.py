@@ -22,11 +22,12 @@ from threading import Thread
 
 # Diccionario para almacenar hilos activos de las cámaras
 active_threads = {}
-
+stop_flags = {}
 
 def iniciar_hilo_camara(id_camara):
     if id_camara not in active_threads or not active_threads[id_camara].is_alive():
-        # Crear y guardar el hilo en el diccionario si no está activo
+        # Crear y guardar el hilo y su flag de detención en los diccionarios
+        stop_flags[id_camara] = False
         hilo = Thread(target=start_vehicle_detection, args=(id_camara,))
         hilo.start()
         active_threads[id_camara] = hilo
@@ -35,11 +36,10 @@ def iniciar_hilo_camara(id_camara):
 
 
 def detener_hilo_camara(id_camara):
-    # Implementar la lógica para detener el hilo, si es necesario
-    if id_camara in active_threads:
-        # Terminar la captura o cerrar el hilo
-        active_threads[id_camara].join()
-        active_threads.pop(id_camara, None)  # Remover del diccionario si el hilo se cierra
+    # Señalar al hilo que debe detenerse
+    if id_camara in stop_flags:
+        stop_flags[id_camara] = True
+
 
 def get_camaras():
     """
@@ -61,18 +61,17 @@ def start_vehicle_detection(id_camara):
         camara = Camara.objects.get(id_camara=id_camara)
         nombre = camara.nombre_camara
         url_input = camara.url_camara
+
         # make a url output based on the url input with out at the end of the name and the time stamp
         url_output = url_input.split(".")[0] + str(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) + "_out." + url_input.split(".")[1]
         track_history = defaultdict(list)
-        # Initialize variables for frame processing time
+        # Initialize variables for frame processing time #TODO: Borrar
         processing_start_time = time.time()
         processing_end_time = time.time()
 
-
-
         vehicles = TipoVehiculo.objects.all().values_list('id_tipo_vehiculo', flat=True)
         if vehicles is None:
-            # Default vehicles
+            # Default vehicle classes if none are found in the database
             vehicles = [2,3,5,7]
 
         # Obtener el umbral de detección de vehículos desde la base de datos
@@ -84,18 +83,15 @@ def start_vehicle_detection(id_camara):
         print(f"Trying to start detection from camera: {nombre}, url: {url_input}")
 
         # Check if the system has a CUDA GPU available
-
         if torch.cuda.is_available():
-            # CUDA GPU available
+            # Set the device to the first CUDA device
             print("CUDA enabled")
             torch.cuda.set_device(0)
         else:
             print("Running on CPU")
 
-        # Get the absolute path of the current script
+        # Get the absolute path of the current script directory and the path to the helmet detection model
         script_dir = os.path.dirname(os.path.abspath(__file__))
-
-        # Construct the absolute path to the model file
         helmet_model_path = os.path.join(script_dir, './modelos/best.pt')
 
         # Check if the file exists
@@ -104,9 +100,7 @@ def start_vehicle_detection(id_camara):
         else:
             print(f"Archivo encontrado: {helmet_model_path}")
 
-
-
-        # Load YOLO models
+        # Load YOLO models #TODO: Cambiar a yolo11m.pt
         model = YOLO('yolo11s.pt')
 
         cap = cv2.VideoCapture(url_input)
@@ -120,7 +114,6 @@ def start_vehicle_detection(id_camara):
         # Create a video writer object to save the output video in a MP4 file
         out = cv2.VideoWriter(url_output, cv2.VideoWriter_fourcc(*'MP4V'), int(input_fps), (W, H))
 
-
         # Load Normal ROI
         try:
             roi_coordinates = ast.literal_eval(ROI.objects.get(id_camara=id_camara, tipo_roi='N').coordenadas)
@@ -128,7 +121,6 @@ def start_vehicle_detection(id_camara):
         except ROI.DoesNotExist:
             roi_vertices = [(0, 0), (W, 0), (W, H), (0, H)]
 
-        # Load all Prohibited ROIs
         prohibited_rois = []
         for p_roi in ROI.objects.filter(id_camara=id_camara, tipo_roi='P'):
             try:
@@ -147,21 +139,15 @@ def start_vehicle_detection(id_camara):
 
         crossed_vehicles = set()  # Track vehicles that have crossed
 
-        while cap.isOpened():
+        while cap.isOpened() and not stop_flags.get(id_camara, False):
             success, frame = cap.read()
             if not success:
-                # close the thread
-                detener_hilo_camara(id_camara)
-                if out is not None:
-                    out.release()
-                if cap.isOpened():
-                    cap.release()
                 break
 
             frame_num += 1
             processing_start_time = time.time()
 
-            results = model.track(frame, persist=True, classes = vehicles, tracker="bytetrack.yaml")
+            results = model.track(frame, persist=True, classes=vehicles, tracker="bytetrack.yaml")
 
             if results[0].boxes.id is not None:
                 boxes = results[0].boxes.xywh.cpu().numpy().astype(int)
@@ -198,7 +184,6 @@ def start_vehicle_detection(id_camara):
                         if is_inside_trapezoid(center_point, p_roi_vertices) and "N" in track_history[track_id]:
                             if track_id not in crossed_vehicles:
                                 if tf_light_vertices:
-                                    # TODO: Check if the next two following line can safely be removed in different scenario
                                     traffic_light_color = detect_roi_dominant_color(frame, tf_light_vertices)
                                     tfl_is_red = is_red_or_pink(traffic_light_color)
                                     if tfl_is_red:
@@ -209,14 +194,14 @@ def start_vehicle_detection(id_camara):
                                     crossed_vehicles.add(track_id)
 
                 # Draw the ROIs on the frame for visualization
+
                 # Draw Normal ROI
                 cv2.polylines(annotated_frame, [np.array(roi_vertices, dtype=np.int32)], isClosed=True, color=(255, 0, 0),
                               thickness=2)
+
                 # Draw each Prohibited ROI
                 for p_roi_vertices in prohibited_rois:
                     cv2.polylines(annotated_frame, [np.array(p_roi_vertices, dtype=np.int32)], isClosed=True, color=(0, 0, 255), thickness=2)
-
-
 
                 # NOTE: METRICS FOR VEHICLE DETECTION
                 # Get the elapsed time for processing the frame
@@ -229,18 +214,18 @@ def start_vehicle_detection(id_camara):
                 # Calculate the ratio of the output frame rate to the input frame rate
                 frame_rate_ratio = output_frame_rate / input_fps
 
-                # Print the frame rate and elapsed time for each frame
                 print("Frame rate: {:.2f} frames per second".format(output_frame_rate))
-                # Results should be above 1 to keep up with the frame rate
+                # Results should be above 1 to keep up with the frame rate in live scenarios
                 print("Output/Input fps ratio: {:.2f}x".format(frame_rate_ratio))
                 print(f"Elapsed time: {elapsed_time_frame} seconds for frame #{frame_num}")
 
                 # TODO: Borrar esta parte del codigo en produccion
-                # Show the frame
-                #cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
-
+                # Show the frame with the detected objects
+                # cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
                 out.write(annotated_frame)
 
+
+                # TODO: Borrar esta parte del codigo en produccion
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
 
@@ -250,14 +235,16 @@ def start_vehicle_detection(id_camara):
             out.release()
 
     finally:
-            if cap.isOpened():
-                cap.release()  # Release video capture object
-            if out is not None:
-                out.release()  # Release video writer object if used
-            cv2.destroyAllWindows()  # Close all OpenCV windows
-            print(f"Deteniendo hilo de cámara {id_camara}")
-            detener_hilo_camara(id_camara)
-
+        if cap.isOpened():
+            cap.release()
+        if out is not None:
+            out.release()
+        cv2.destroyAllWindows()
+        print(f"Deteniendo hilo de cámara {id_camara}")
+        if id_camara in active_threads:
+            active_threads.pop(id_camara, None)
+        if id_camara in stop_flags:
+            stop_flags.pop(id_camara, None)
 
 def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
     try:
