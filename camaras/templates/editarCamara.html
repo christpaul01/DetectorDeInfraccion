@@ -98,7 +98,7 @@
 
         if (roiProhibidoCheckbox.checked) {
             maxROIInput.disabled = false;
-            maxROIInput.value = {{ cant_roi_p }};  // Asignar el valor cuando se selecciona ROI Prohibido
+            maxROIInput.value = 1;  // Asignar el valor 1 cuando se selecciona ROI Prohibido
         } else {
             maxROIInput.disabled = true;
             maxROIInput.value = '';  // Limpiar el valor cuando se deshabilita
