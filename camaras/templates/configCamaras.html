@@ -139,9 +139,12 @@
 
 
 <script>
+  let checkInterval = 15000; // Start by checking every 15 seconds
+  let intervalId;
+
   // Function to check if the camera thread is still active
   function checkCameraStatus(idCamara) {
-      fetch(`/checkThreadStatus/${idCamara}/`)
+      return fetch(`/checkThreadStatus/${idCamara}/`)
           .then(response => response.json())
           .then(data => {
               let button = document.querySelector(`#camara-btn-${idCamara}`);
@@ -159,16 +162,44 @@
                   button.innerText = 'Iniciar';
                   button.href = `iniciarCamara/${idCamara}`;
               }
+
+              return data.is_active; // Return the camera status
           });
   }
 
-  // Periodically check the status of all cameras
-  setInterval(function() {
+  // Function to check the status of all cameras and adjust the interval
+  function checkAllCameraStatus() {
+      let cameraChecks = [];
+
       {% for c in camaras_estado %}
-          checkCameraStatus({{ c.camara.id_camara }});
+          cameraChecks.push(checkCameraStatus({{ c.camara.id_camara }}));
       {% endfor %}
-  }, 5000);  // Check every 10 seconds
+
+      // After all camera checks complete, decide if we need to change the interval
+      Promise.all(cameraChecks).then(results => {
+          // If any camera is active, reduce the interval to 5 seconds
+          if (results.includes(true)) {
+              if (checkInterval !== 5000) {
+                  clearInterval(intervalId);  // Clear the old interval
+                  checkInterval = 5000;       // Update to 5 seconds
+                  intervalId = setInterval(checkAllCameraStatus, checkInterval); // Start new interval
+              }
+          } else {
+              // If no camera is active, set the interval back to 15 seconds
+              if (checkInterval !== 15000) {
+                  clearInterval(intervalId);  // Clear the old interval
+                  checkInterval = 15000;      // Update to 15 seconds
+                  intervalId = setInterval(checkAllCameraStatus, checkInterval); // Start new interval
+              }
+          }
+      });
+  }
+
+  // Start by checking the status of all cameras with the initial interval
+  intervalId = setInterval(checkAllCameraStatus, checkInterval);
+
 </script>
+
 
 
 
