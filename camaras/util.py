@@ -38,6 +38,7 @@ def detener_hilo_camara(id_camara):
     # Implementar la lógica para detener el hilo, si es necesario
     if id_camara in active_threads:
         # Terminar la captura o cerrar el hilo
+        active_threads[id_camara].join()
         active_threads.pop(id_camara, None)  # Remover del diccionario si el hilo se cierra
 
 def get_camaras():
@@ -149,6 +150,12 @@ def start_vehicle_detection(id_camara):
         while cap.isOpened():
             success, frame = cap.read()
             if not success:
+                # close the thread
+                detener_hilo_camara(id_camara)
+                if out is not None:
+                    out.release()
+                if cap.isOpened():
+                    cap.release()
                 break
 
             frame_num += 1
@@ -230,7 +237,7 @@ def start_vehicle_detection(id_camara):
 
                 # TODO: Borrar esta parte del codigo en produccion
                 # Show the frame
-                cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
+                #cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
 
                 out.write(annotated_frame)
 
@@ -239,9 +246,17 @@ def start_vehicle_detection(id_camara):
 
         cap.release()
         cv2.destroyAllWindows()
+        if out is not None:
+            out.release()
+
     finally:
-        print(f"Deteniendo hilo de cámara {id_camara}")
-        detener_hilo_camara(id_camara)
+            if cap.isOpened():
+                cap.release()  # Release video capture object
+            if out is not None:
+                out.release()  # Release video writer object if used
+            cv2.destroyAllWindows()  # Close all OpenCV windows
+            print(f"Deteniendo hilo de cámara {id_camara}")
+            detener_hilo_camara(id_camara)
 
 
 def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
