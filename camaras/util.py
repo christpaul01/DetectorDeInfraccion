@@ -189,7 +189,8 @@ def start_vehicle_detection(id_camara):
                     for p_roi_vertices in prohibited_rois:
                         if is_inside_trapezoid(center_point, p_roi_vertices) and "N" in track_history[track_id]:
                             if track_id not in crossed_vehicles:
-                                frame_inicial = (frame_num * input_fps) - 15
+                                # Substract seconds from that frame to get the initial frame
+                                frame_inicial = max(0, frame_num - 5*input_fps) # TODO: Cambiar a que sea desde el  inicio de deteccion
                                 if tf_light_vertices:
                                     traffic_light_color = detect_roi_dominant_color(frame, tf_light_vertices)
                                     tfl_is_red = is_red_or_pink(traffic_light_color)

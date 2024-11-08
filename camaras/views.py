@@ -175,7 +175,6 @@ def registarCamara(request):
 def stream_video(request, id_camara):
     # Attempt to get the camera object
     camara = get_object_or_404(Camara, id_camara=id_camara)
-    video_path = camara.url_camara
 
     # Prepare context for the template
     context = {
@@ -184,6 +183,40 @@ def stream_video(request, id_camara):
     }
 
     return render(request, 'stream.html', context)
+
+@login_required
+def stream_infraccion(request, id_infraccion):
+    # Attempt to get the infraccion object
+    infraccion = get_object_or_404(Infraccion, id_infraccion=id_infraccion)
+
+    # Prepare context for the template
+    context = {
+        'infraccion': infraccion,
+        'video_url': f"/streamInfracciones/{infraccion.id_infraccion}/video/"
+    }
+
+    return render(request, 'streamInfraccion.html', context)
+
+@login_required
+def stream_infraccion_content(request, id_infraccion):
+    try:
+        infraccion = Infraccion.objects.get(id_infraccion=id_infraccion)
+        camara = infraccion.id_camara
+        video_path = camara.url_camara
+    except Infraccion.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No se encontró la infracción solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
+    start_frame = infraccion.frame_inicio
+    end_frame = infraccion.frame_final
+
+    # Call the modified function to stream frames
+    response = StreamingHttpResponse(utilidades.video_to_html(video_path, start_frame, end_frame),
+                                     content_type='multipart/x-mixed-replace; boundary=frame')
+
+    return response
 
 @login_required
 def stream_video_content(request, id_camara):
@@ -201,28 +234,6 @@ def stream_video_content(request, id_camara):
     response = StreamingHttpResponse(utilidades.video_to_html(video_path, start_frame, end_frame),
                                      content_type='multipart/x-mixed-replace; boundary=frame')
     return response
-
-# def stream_video_content(request, id_camara):
-#     # NOTE: For testing purposes, the original video is streamed
-#     # TODO: Modify this function to stream infraccion videos instead of the original video
-#     try:
-#         camara = Camara.objects.get(id_camara=id_camara)
-#         video_path = camara.url_camara
-#     except Camara.DoesNotExist:
-#         print("No se encontró la cámara solicitada.")
-#         error_type = "Error de procesamiento"
-#         error_message = "No se encontró la cámara solicitada."
-#         context = {"error_type": error_type, "error_message": error_message}
-#         return render(request, 'error.html', context)
-#
-#     # TODO: Get the start and end frame from the request
-#     start_frame = 0
-#     end_frame = 100
-#
-#     # Call the modified function to stream frames
-#     response = StreamingHttpResponse(utilidades.video_to_html(video_path, start_frame, end_frame),
-#                                      content_type='multipart/x-mixed-replace; boundary=frame')
-#     return response
 
 @login_required
 def start_camara(request, id_camara):
