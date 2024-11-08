@@ -189,6 +189,19 @@ def start_vehicle_detection(id_camara):
                     for p_roi_vertices in prohibited_rois:
                         if is_inside_trapezoid(center_point, p_roi_vertices) and "N" in track_history[track_id]:
                             if track_id not in crossed_vehicles:
+
+                                # Add padding around the detected bounding box
+                                padding = 100  # Adjust padding as needed
+                                x1 = max(0, x - padding)  # Ensure x1 is within bounds
+                                y1 = max(0, y - padding)  # Ensure y1 is within bounds
+                                x2 = min(frame.shape[1], x + w + padding)  # Ensure x2 is within bounds
+                                y2 = min(frame.shape[0], y + h + padding)  # Ensure y2 is within bounds
+
+                                # Capture the full image of the detected vehicle with padding
+                                vehicle_full_image = frame[y1:y2, x1:x2]
+                                vehicle_coord_image_base64 = frame_to_base64(vehicle_full_image)
+
+                                #vehicle_coord_image_base64 = frame_to_base64(frame[y:y+h, x:x+w])
                                 # Substract seconds from that frame to get the initial frame
                                 frame_inicial = max(0, frame_num - 5*input_fps) # TODO: Cambiar a que sea desde el  inicio de deteccion
                                 if tf_light_vertices:
@@ -201,7 +214,8 @@ def start_vehicle_detection(id_camara):
                                                                   id_camara=Camara.objects.get(id_camara=id_camara), fecha_infraccion=datetime.datetime.now(),
                                                                   tipo_infraccion=TipoInfraccion.objects.get(id_tipo_infraccion=3), id_videoinfraccion=url_output,
                                                                   frame_inicio=frame_inicial, frame_final=frame_num, estado_infraccion='Pendiente', revision_infraccion='Pendiente',
-                                                                  notas='Vehiculo cruzo del ROI Normal hacia un ROI Prohibido mientras que la luz estaba roja!')
+                                                                  notas='Vehiculo cruzo del ROI Normal hacia un ROI Prohibido mientras que la luz estaba roja!',
+                                                                  vehicle_image_base64=vehicle_coord_image_base64)
                                 else:
                                     print(f"Vehiculo de ID # {track_id} cruzo del ROI Normal hacia un ROI Prohibido!")
                                     crossed_vehicles.add(track_id)
@@ -209,7 +223,8 @@ def start_vehicle_detection(id_camara):
                                                               id_camara=Camara.objects.get(id_camara=id_camara), fecha_infraccion=datetime.datetime.now(),
                                                               tipo_infraccion=TipoInfraccion.objects.get(id_tipo_infraccion=2), id_videoinfraccion=url_output,
                                                               frame_inicio=frame_inicial, frame_final=frame_num, estado_infraccion='Pendiente', revision_infraccion='Pendiente',
-                                                              notas='Vehiculo cruzo del ROI Normal hacia un ROI Prohibido!')
+                                                              notas='Vehiculo cruzo del ROI Normal hacia un ROI Prohibido!',
+                                                              vehicle_image_base64=vehicle_coord_image_base64)
 
                 # Draw the ROIs on the frame for visualization
 

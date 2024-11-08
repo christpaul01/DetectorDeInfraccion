@@ -75,6 +75,7 @@ class Infraccion(models.Model):
     estado_infraccion = models.CharField(max_length=25)
     revision_infraccion = models.CharField(max_length=25)
     notas = models.CharField(max_length=255)
+    vehicle_image_base64 = models.TextField(blank=True, null=True)
 
 class TipoVehiculo(models.Model):
     id_tipo_vehiculo = models.AutoField(primary_key=True)
