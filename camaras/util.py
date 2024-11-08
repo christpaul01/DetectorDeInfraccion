@@ -16,7 +16,7 @@ from PIL import Image
 # For Streaming Video
 from django.http import StreamingHttpResponse
 
-from .models import Camara, Direccion, ROI, TipoVehiculo, Umbral
+from .models import Camara, Direccion, ROI, TipoVehiculo, Umbral, Infraccion, TipoInfraccion
 
 from threading import Thread
 
@@ -153,6 +153,10 @@ def start_vehicle_detection(id_camara):
                 boxes = results[0].boxes.xywh.cpu().numpy().astype(int)
                 track_ids = results[0].boxes.id.cpu().numpy().astype(int)
                 scores = results[0].boxes.conf.cpu().numpy()
+                detected_class_indices = results[0].boxes.cls.cpu().numpy().astype(int)
+
+                print(f"Detected objects: {detected_class_indices}")
+
 
                 annotated_frame = results[0].plot()
 
@@ -169,9 +173,11 @@ def start_vehicle_detection(id_camara):
                                 (tf_light_vertices[0][0], tf_light_vertices[0][1] - 5),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 125), 2, cv2.LINE_AA)
 
-                for box, track_id, score in zip(boxes, track_ids, scores):
+                for box, track_id, score, detected_object_class in zip(boxes, track_ids, scores, detected_class_indices):
                     x, y, w, h = box
                     center_point = (int(x + w / 2), int(y + h / 2))
+
+                    print(f"Track ID: {track_id}, Class: {detected_object_class}, Score: {score}, Center: {center_point}")
 
                     if score >= threshold_vehicle:
                         # Check if vehicle is inside the normal ROI
@@ -183,15 +189,26 @@ def start_vehicle_detection(id_camara):
                     for p_roi_vertices in prohibited_rois:
                         if is_inside_trapezoid(center_point, p_roi_vertices) and "N" in track_history[track_id]:
                             if track_id not in crossed_vehicles:
+                                frame_inicial = (frame_num * input_fps) - 15
                                 if tf_light_vertices:
                                     traffic_light_color = detect_roi_dominant_color(frame, tf_light_vertices)
                                     tfl_is_red = is_red_or_pink(traffic_light_color)
                                     if tfl_is_red:
-                                        print(f"Vehiculo de ID # {track_id} cruzo del ROI Normal hacia un ROI Prohibido mientras que la luz estaba roja!")
+                                        print(f"Vehiculo de ID # {track_id} y tipo {detected_object_class} cruzo del ROI Normal hacia un ROI Prohibido mientras que la luz estaba roja!")
                                         crossed_vehicles.add(track_id)
+                                        Infraccion.objects.create(id_vehiculo=track_id, id_tipo_vehiculo=TipoVehiculo.objects.get(id_tipo_vehiculo=detected_object_class),
+                                                                  id_camara=Camara.objects.get(id_camara=id_camara), fecha_infraccion=datetime.datetime.now(),
+                                                                  tipo_infraccion=TipoInfraccion.objects.get(id_tipo_infraccion=3), id_videoinfraccion=url_output,
+                                                                  frame_inicio=frame_inicial, frame_final=frame_num, estado_infraccion='Pendiente', revision_infraccion='Pendiente',
+                                                                  notas='Vehiculo cruzo del ROI Normal hacia un ROI Prohibido mientras que la luz estaba roja!')
                                 else:
                                     print(f"Vehiculo de ID # {track_id} cruzo del ROI Normal hacia un ROI Prohibido!")
                                     crossed_vehicles.add(track_id)
+                                    Infraccion.objects.create(id_vehiculo=track_id, id_tipo_vehiculo=TipoVehiculo.objects.get(id_tipo_vehiculo=detected_object_class),
+                                                              id_camara=Camara.objects.get(id_camara=id_camara), fecha_infraccion=datetime.datetime.now(),
+                                                              tipo_infraccion=TipoInfraccion.objects.get(id_tipo_infraccion=2), id_videoinfraccion=url_output,
+                                                              frame_inicio=frame_inicial, frame_final=frame_num, estado_infraccion='Pendiente', revision_infraccion='Pendiente',
+                                                              notas='Vehiculo cruzo del ROI Normal hacia un ROI Prohibido!')
 
                 # Draw the ROIs on the frame for visualization
 
@@ -221,7 +238,7 @@ def start_vehicle_detection(id_camara):
 
                 # TODO: Borrar esta parte del codigo en produccion
                 # Show the frame with the detected objects
-                # cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
+                cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
                 out.write(annotated_frame)
 
 

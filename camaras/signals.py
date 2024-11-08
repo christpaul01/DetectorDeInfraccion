@@ -9,7 +9,7 @@ def create_default_infraccion_types(sender, **kwargs):
     infraccion_data = [
         {"id": 1, "nombre": "Motociclista sin casco", "detalles": "Infraccion por conducir una motocicleta sin casco"},
         {"id": 2, "nombre": "Cruce ilegal", "detalles": "Infraccion por cruzar una intersección de forma ilegal"},
-        {"id": 3, "nombre": "Giro en U", "detalles": "Infraccion por realizar un giro en U en una zona prohibida"},
+        {"id": 3, "nombre": "Luz roja", "detalles": "Infraccion por pasar un semáforo en rojo"},
     ]
 
     for infraccion in infraccion_data:
