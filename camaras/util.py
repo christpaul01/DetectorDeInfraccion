@@ -191,7 +191,7 @@ def start_vehicle_detection(id_camara):
                             if track_id not in crossed_vehicles:
 
                                 # Add padding around the detected bounding box
-                                padding = 100  # Adjust padding as needed
+                                padding = 75  # Adjust padding as needed
                                 x1 = max(0, x - padding)  # Ensure x1 is within bounds
                                 y1 = max(0, y - padding)  # Ensure y1 is within bounds
                                 x2 = min(frame.shape[1], x + w + padding)  # Ensure x2 is within bounds

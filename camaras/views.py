@@ -218,6 +218,23 @@ def stream_infraccion_content(request, id_infraccion):
 
     return response
 
+
+@login_required
+def detallesInfraccion(request, id_infraccion):
+    try:
+        infraccion = Infraccion.objects.get(id_infraccion=id_infraccion)
+        camara = infraccion.id_camara
+        tipo_vehiculo = TipoVehiculo.objects.get(id_tipo_vehiculo=infraccion.id_tipo_vehiculo_id).nombre_tipo_vehiculo
+        tipo_infraccion = TipoInfraccion.objects.get(id_tipo_infraccion=infraccion.tipo_infraccion_id).nombre_tipo_infraccion
+        context = {"infraccion": infraccion, "camara": camara, "tipo_vehiculo": tipo_vehiculo, "tipo_infraccion": tipo_infraccion}
+        return render(request, 'detallesInfraccion.html', context)
+    except Infraccion.DoesNotExist:
+        error_type = "Error de procesamiento"
+        error_message = "No se encontró la infracción solicitada."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
+
 @login_required
 def stream_video_content(request, id_camara):
     try:

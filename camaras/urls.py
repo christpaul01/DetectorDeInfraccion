@@ -37,9 +37,11 @@ urlpatterns = [
     path('stream/<int:id_camara>/', views.stream_video, name='stream_video'),
     path('stream/<int:id_camara>/video/', views.stream_video_content, name='stream_video_content'),
 
+    # Bloque Infraccion
     # Stream Infracciones
     path('streamInfracciones/<int:id_infraccion>', views.stream_infraccion, name='stream_infraccion'),
     path('streamInfracciones/<int:id_infraccion>/video/', views.stream_infraccion_content, name='stream_infraccion_content'),
+    path('infracciones/detallesInfracciones/<int:id_infraccion>', views.detallesInfraccion, name='detallesInfracciones'),
 
     # login path
     path('login/', views.loginpage, name='login'),

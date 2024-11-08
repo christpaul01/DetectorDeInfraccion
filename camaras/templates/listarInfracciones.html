@@ -29,7 +29,8 @@
                         <td>{{ infraccion.fecha_infraccion }}</td>
                         <td>{{ infraccion.estado_infraccion }}</td>
                         <td>
-                            <a href="/streamInfracciones/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-info">Ver</a>
+                            <a href="/streamInfracciones/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-info">Stream</a>
+                            <a href="detallesInfracciones/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-primary">Detalles</a>
                             <a href="/revisarInfraccion/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-warning">Revisar</a>
                         </td>
                     </tr>
