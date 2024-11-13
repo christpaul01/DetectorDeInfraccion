@@ -73,7 +73,7 @@ class Infraccion(models.Model):
     frame_inicio = models.IntegerField()
     frame_final = models.IntegerField()
     estado_infraccion = models.CharField(max_length=25)
-    revision_infraccion = models.CharField(max_length=25)
+    revision_infraccion = models.CharField(max_length=100)
     notas = models.CharField(max_length=255)
     vehicle_image_base64 = models.TextField(blank=True, null=True)
 

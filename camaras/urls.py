@@ -38,10 +38,16 @@ urlpatterns = [
     path('stream/<int:id_camara>/video/', views.stream_video_content, name='stream_video_content'),
 
     # Bloque Infraccion
+    path('infracciones/', views.listarInfracciones, name='listarInfracciones'),
     # Stream Infracciones
     path('streamInfracciones/<int:id_infraccion>', views.stream_infraccion, name='stream_infraccion'),
     path('streamInfracciones/<int:id_infraccion>/video/', views.stream_infraccion_content, name='stream_infraccion_content'),
     path('infracciones/detallesInfracciones/<int:id_infraccion>', views.detallesInfraccion, name='detallesInfracciones'),
+    path('confirmarInfraccion/<int:id_infraccion>/', views.confirmarInfraccion, name='confirmarInfraccion'),
+    path('denegarInfraccion/<int:id_infraccion>/', views.denegarInfraccion, name='denegarInfraccion'),
+    path('infracciones/eliminarInfraccion/<int:id_infraccion>', views.eliminarInfraccion, name='eliminarInfraccion'),
+
+
 
     # login path
     path('login/', views.loginpage, name='login'),
@@ -64,8 +70,6 @@ urlpatterns = [
     # Desactivar Usuario
     path('cambiarEstadoCuenta/<int:id>', views.cambiarEstadoCuenta, name='cambiarEstadoCuenta'),
 
-    # Bloque de Infracciones
-    path('infracciones/', views.listarInfracciones, name='listarInfracciones'),
 
     # NOTE: This path is for settings
     path('configuracion/', views.verConfiguracionSistema, name='configuracionSistema'),

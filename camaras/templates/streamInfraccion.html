@@ -2,19 +2,34 @@
 
 {% block body %}
 <body>
-    <h1 class="text-center mb-4">Video Stream for infracción #{{ infraccion.id_infraccion }}</h1>
-    <div class="text-center">
-        <img src="{{ video_url }}" alt="Video Stream" class="img-fluid" style="max-width: 100%; height: auto;">
+
+
+    <h2 class="text-center mb-4">Video de la infracción #{{ infraccion.id_infraccion }}</h2>
+    <div class="d-flex justify-content-center">
+        <!-- Video stream -->
+        <div class="text-center">
+            <img src="{{ video_url }}" alt="Video Stream" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
     </div>
+
+    <!-- Image of the infracción, if it exists -->
+    {% if infraccion.vehicle_image_base64 %}
+        <br>
+        <h4 class="text-center mb-4">Vehiculo de la Infracción #{{ infraccion.id_infraccion }}</h4>
+        <div class="text-center ml-4">
+            <img src="data:image/png;base64,{{ infraccion.vehicle_image_base64 }}"
+                 alt="Imagen de la Infracción" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+    {% endif %}
 
     <div class="text-center mt-4">
         <!-- Botón para confirmar la infracción -->
-        <a href="/infracciones/confirmarInfraccion/{{ infraccion.id_infraccion }}" class="btn btn-success mx-2">
+        <a href="{% url 'confirmarInfraccion' infraccion.id_infraccion %}" class="btn btn-success mx-2">
             Confirmar Infracción
         </a>
 
         <!-- Botón para denegar la infracción -->
-        <a href="/infracciones/denegarInfraccion/{{ infraccion.id_infraccion }}" class="btn btn-danger mx-2">
+        <a href="{% url 'denegarInfraccion' infraccion.id_infraccion %}" class="btn btn-danger mx-2">
             Denegar Infracción
         </a>
     </div>

@@ -236,6 +236,37 @@ def detallesInfraccion(request, id_infraccion):
 
 
 @login_required
+def confirmarInfraccion(request, id_infraccion):
+    nombreUsuario = request.user.username
+    infraccion = Infraccion.objects.get(id_infraccion=id_infraccion)
+    infraccion.estado_infraccion = 'Confirmada'
+    infraccion.revision_infraccion = f'Confirmada por usuario: {nombreUsuario}'
+    infraccion.save()
+    return redirect(listarInfracciones)
+
+@login_required
+def denegarInfraccion(request, id_infraccion):
+    nombreUsuario = request.user.username
+    infraccion = Infraccion.objects.get(id_infraccion=id_infraccion)
+    infraccion.estado_infraccion = 'Denegada'
+    infraccion.revision_infraccion = f'Denegada por usuario: {nombreUsuario}'
+    infraccion.save()
+    return redirect(listarInfracciones)
+
+@login_required
+def eliminarInfraccion(request, id_infraccion):
+    isAdmin = request.user.groups.filter(name='Admin').exists()
+    if not isAdmin:
+        error_type = "Error de permisos"
+        error_message = "No tienes permisos para borrar infracciones."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
+
+    infraccion = Infraccion.objects.get(id_infraccion=id_infraccion)
+    infraccion.delete()
+    return redirect(listarInfracciones)
+
+@login_required
 def stream_video_content(request, id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
