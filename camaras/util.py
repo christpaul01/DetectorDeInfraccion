@@ -259,8 +259,8 @@ def start_vehicle_detection(id_camara):
 
 
                 # TODO: Borrar esta parte del codigo en produccion
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
+                # if cv2.waitKey(1) & 0xFF == ord("q"):
+                #     break
 
         cap.release()
         cv2.destroyAllWindows()
