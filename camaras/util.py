@@ -254,7 +254,7 @@ def start_vehicle_detection(id_camara):
 
                 # TODO: Borrar esta parte del codigo en produccion
                 # Show the frame with the detected objects
-                cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
+                #cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
                 out.write(annotated_frame)
 
 
