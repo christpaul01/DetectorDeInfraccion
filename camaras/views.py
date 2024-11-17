@@ -21,7 +21,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib import messages
 
 from django.http import JsonResponse
-
+from django.db.models import Count
 
 
 def get_next_camera_id():
@@ -767,6 +767,41 @@ def listarInfracciones(request):
     return render(request, 'listarInfracciones.html', context)
 
 # NOTE: Ajustes del Sistema
+
+def estadisticas(request):
+    # 1. Obtener datos dinámicos
+    top_direcciones = (
+        Direccion.objects.annotate(infracciones_totales=Count('camara__infraccion'))
+        .order_by('-infracciones_totales')[:5]
+    )
+    tipos_infracciones = (
+        TipoInfraccion.objects.annotate(infracciones_totales=Count('infraccion'))
+        .order_by('-infracciones_totales')
+    )
+    tipo_vehiculos = (
+        TipoVehiculo.objects.annotate(infracciones_totales=Count('infraccion'))
+        .order_by('-infracciones_totales')
+    )
+    estado_infracciones = (
+        Infraccion.objects.values('estado_infraccion').annotate(total=Count('id_infraccion'))
+    )
+    camara_top = (
+        Camara.objects.annotate(infracciones_totales=Count('infraccion'))
+        .order_by('-infracciones_totales')[:1]
+    )
+
+    # 2. Preparar datos para renderizar en JSON/JavaScript
+    context = {
+        "top_direcciones": [{"nombre": d.nombre_direccion, "total": d.infracciones_totales} for d in top_direcciones],
+        "tipos_infracciones": [{"nombre": t.nombre_tipo_infraccion, "total": t.infracciones_totales} for t in tipos_infracciones],
+        "tipo_vehiculos": [{"nombre": v.nombre_tipo_vehiculo, "total": v.infracciones_totales} for v in tipo_vehiculos],
+        "estado_infracciones": list(estado_infracciones),
+        "camara_top": [{"nombre": c.nombre_camara, "total": c.infracciones_totales} for c in camara_top],
+    }
+
+    # 3. Renderizar plantilla con datos
+    return render(request, 'dashboards.html', context)
+
 @login_required
 def ajustesSistema(request):
     return render(request, 'ajustesSistema.html')
