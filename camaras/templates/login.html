@@ -10,23 +10,19 @@
         {% csrf_token %}
         <img class="mb-4" src="https://cdn-icons-png.flaticon.com/512/9670/9670948.png" width="250" height="250" alt="">
         <h1 class="h3 mb-3 font-weight-normal">
-            Please sign in
+            Por favor, inicie sesión
         </h1>
         <br>
         <label for="inputUsername" class="sr-only">
-            User Name
+            Usuario
         </label>
         <input type="text" id="inputUsername" class="form-control" placeholder="User Name" name="username" required autofocus>
         <br>
         <label for="inputPassword" class="sr-only">
-            Password
+            Contraseña
         </label>
         <input type="password" id="inputPassword" class="form-control" placeholder="Password" name="password" required>
         <br>
-        <div class="checkbox mb-3">
-            <h6>Dont Have an account? </h6>
-            <a class="btn btn-sm btn-secondary" href="{% url 'register' %}">Register</a>
-        </div>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
     </form>
 </body>
