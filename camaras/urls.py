@@ -31,6 +31,8 @@ urlpatterns = [
     # Visualizacion de direccion
     path('direcciones/verDireccion/<int:id_direccion>', views.verDireccion, name='direccion'),
 
+    path('estadisticas/', views.estadisticas),
+
 
 
    # path('stream/<id_camara>', views.stream_video, name='stream_video')

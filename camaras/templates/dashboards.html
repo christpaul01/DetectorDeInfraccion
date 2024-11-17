@@ -1,0 +1,155 @@
+
+{% extends "./BaseCamaras.html" %}
+
+{% block title %}
+    Dashboards
+{% endblock %}
+
+{%  block body %}
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cdbootstrap/css/bootstrap.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/cdbootstrap/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+
+    <title>Dashboard de Infracciones</title>
+  </head>
+  <body>
+    <div class="container my-5">
+      <h1 class="text-center mb-4">Dashboard de Infracciones</h1>
+
+      <div class="row">
+        <div class="col-md-6">
+          <h4>Top 5 Direcciones con Más Infracciones</h4>
+          <canvas id="topDireccionesChart"></canvas>
+        </div>
+
+        <div class="col-md-6">
+          <h4>Tipos de Infracciones Más Detectadas</h4>
+          <canvas id="tiposInfraccionesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="row mt-5">
+        <div class="col-md-6">
+          <h4>Tipo de Vehículos con Más Infracciones</h4>
+          <canvas id="tipoVehiculosChart"></canvas>
+        </div>
+
+        <div class="col-md-6">
+          <h4>Estado de las Infracciones</h4>
+          <canvas id="estadoInfraccionesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="row mt-5">
+        <div class="col-md-12">
+          <h4>Cámara con Más Infracciones</h4>
+          <canvas id="camaraInfraccionesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Datos pasados desde el backend
+      const topDirecciones = {{ top_direcciones|safe }};
+      const tiposInfracciones = {{ tipos_infracciones|safe }};
+      const tipoVehiculos = {{ tipo_vehiculos|safe }};
+      const estadoInfracciones = {{ estado_infracciones|safe }};
+      const camaraTop = {{ camara_top|safe }};
+
+      // Función para gráficos
+      const configBarChart = (ctxId, labels, data, label, backgroundColor, borderColor) => {
+        const ctx = document.getElementById(ctxId).getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: label,
+                backgroundColor: backgroundColor,
+                borderColor: borderColor,
+                data: data,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              yAxes: [
+                {
+                  ticks: {
+                    beginAtZero: true,
+                  },
+                },
+              ],
+            },
+          },
+        });
+      };
+
+      const configPieChart = (ctxId, labels, data, backgroundColors) => {
+        const ctx = document.getElementById(ctxId).getContext("2d");
+        new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                backgroundColor: backgroundColors,
+                data: data,
+              },
+            ],
+          },
+        });
+      };
+
+      // Generar gráficos con datos
+      configBarChart(
+        "topDireccionesChart",
+        topDirecciones.map((d) => d.nombre),
+        topDirecciones.map((d) => d.total),
+        "Infracciones",
+        "rgba(161, 198, 247, 1)",
+        "rgb(47, 128, 237)"
+      );
+
+      configPieChart(
+        "tiposInfraccionesChart",
+        tiposInfracciones.map((t) => t.nombre),
+        tiposInfracciones.map((t) => t.total),
+        ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"]
+      );
+
+      configBarChart(
+        "tipoVehiculosChart",
+        tipoVehiculos.map((v) => v.nombre),
+        tipoVehiculos.map((v) => v.total),
+        "Infracciones",
+        "rgba(153, 102, 255, 0.6)",
+        "rgba(153, 102, 255, 1)"
+      );
+
+      configPieChart(
+        "estadoInfraccionesChart",
+        estadoInfracciones.map((e) => e.estado_infraccion),
+        estadoInfracciones.map((e) => e.total),
+        ["#4BC0C0", "#FFCE56"]
+      );
+
+      configBarChart(
+        "camaraInfraccionesChart",
+        camaraTop.map((c) => c.nombre),
+        camaraTop.map((c) => c.total),
+        "Infracciones",
+        "rgba(255, 99, 132, 0.6)",
+        "rgba(255, 99, 132, 1)"
+      );
+    </script>
+  </body>
+</html>
+{% endblock %}
