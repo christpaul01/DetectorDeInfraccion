@@ -329,7 +329,7 @@ def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
             current_frame += 1
 
     except Exception as e:
-        print(f"Exception occurred: {e}")
+        print(f"Exception occurred in video_to_html: {e}")
 
     finally:
         cap.release()

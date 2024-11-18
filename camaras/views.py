@@ -313,13 +313,17 @@ def check_thread_status(request, id_camara):
 def editarCamara(request,id_camara):
     try:
         camara = Camara.objects.get(id_camara=id_camara)
+        direccionCamara = camara.id_direccion_camara_id
+        dirreciones = Direccion.objects.all()
         has_roi_n = ROI.objects.filter(id_camara=id_camara, tipo_roi='N').exists()
         cant_roi_p = ROI.objects.filter(id_camara=id_camara, tipo_roi='P').count()
         has_roi_p = cant_roi_p > 0
         has_luz_roja = ROI.objects.filter(id_camara=id_camara, tipo_roi='S').exists()
 
 
-        context = {"camara": camara, "has_roi_n": has_roi_n, "has_luz_roja": has_luz_roja, "has_roi_p": has_roi_p, "cant_roi_p": cant_roi_p}
+        context = {"camara": camara, "has_roi_n": has_roi_n, "has_luz_roja": has_luz_roja,
+                   "has_roi_p": has_roi_p, "cant_roi_p": cant_roi_p, "direcciones": dirreciones,
+                   "direccionCamara": direccionCamara}
 
         return render(request, 'editarCamara.html', context)
     except Camara.DoesNotExist:
@@ -365,10 +369,12 @@ def edicionCamara(request):
         idCamara = request.POST['idCamara']
         nombre = request.POST['nombreCamara']
         estado = request.POST['estadoCamara']
+        direccionCamara = request.POST['idDireccionCamara']
         threshold_vehicle = request.POST['thresholdVehicle']
         threshold_license_plate = request.POST['thresholdLicensePlate']
         threshold_helmet = request.POST['thresholdHelmet']
         maxROIProhibido = int(request.POST.get('maxROIProhibido', 1))
+
 
 
         isROIProhibidoSelected = request.POST.get('ROIProhibido', False)
@@ -381,6 +387,7 @@ def edicionCamara(request):
             camara.id_camara = idCamara
             camara.nombre_camara = nombre
             camara.estado_camara = estado
+            camara.id_direccion_camara_id = direccionCamara
             camara.threshold_vehicle = threshold_vehicle
             camara.threshold_license_plate = threshold_license_plate
             camara.threshold_helmet = threshold_helmet

@@ -29,6 +29,22 @@
                     </select>
                 </div>
 
+
+            <div class="form-group">
+                <label for="idDireccionCamara">Dirección de la Cámara</label>
+                <select id="idDireccionCamara" name="idDireccionCamara" class="form-control" required>
+                    <option value="" {% if not direccionCamara %}selected{% endif %}>Ninguno</option>
+                    {% for direccion in direcciones %}
+                        <option value="{{ direccion.id_direccion }}"
+                            {% if direccion.id_direccion == direccionCamara %}selected{% endif %}>
+                            {{ direccion.nombre_direccion }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+
+
                 <div class="form-group">
                     <input type="text" id="resolucionCamara" name="resolucionCamara" value="{{ camara.resolucion_camara }}" class="form-control" placeholder="Resolución" minlength="6" maxlength="10" readonly required>
                 </div>
