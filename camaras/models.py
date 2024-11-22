@@ -13,6 +13,7 @@ class Direccion(models.Model):
     pais = models.CharField(max_length=255)
     detalles = models.CharField(max_length=255)
     google_maps_url = models.CharField(max_length=255, blank=True, null=True)
+    google_embeded_url = models.CharField(max_length=1000, blank=True, null=True)
 
 class Umbral(models.Model):
     id_umbral = models.AutoField(primary_key=True)

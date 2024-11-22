@@ -12,6 +12,8 @@ import torch
 import ast
 import base64
 from PIL import Image
+import re
+from bs4 import BeautifulSoup
 
 # For Streaming Video
 from django.http import StreamingHttpResponse
@@ -725,3 +727,45 @@ def is_thread_running(id_camara):
     if id_camara in active_threads:
         return active_threads[id_camara].is_alive()
     return False
+
+
+def validate_google_maps_iframe(html):
+    try:
+        # Parse the HTML
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Find the iframe
+        iframe = soup.find("iframe")
+        if not iframe:
+            return False, "No iframe found"
+
+        # Check the src attribute
+        src = iframe.get("src", "")
+        google_maps_regex = re.compile(
+            r"^https://www\.google\.com/maps/embed\?.+"
+        )
+        if not google_maps_regex.match(src):
+            return False, "Invalid src attribute for Google Maps iframe"
+
+        # Check required attributes
+        required_attributes = {
+            "width": r"^\d+$",
+            "height": r"^\d+$",
+            "style": r".*",
+        }
+        for attr, pattern in required_attributes.items():
+            value = iframe.get(attr)
+            if not value or not re.match(pattern, value):
+                return False, f"Missing or invalid {attr} attribute"
+
+        # Optional attributes: allowfullscreen, loading, referrerpolicy
+        optional_attributes = ["allowfullscreen", "loading", "referrerpolicy"]
+        for attr in optional_attributes:
+            if attr not in iframe.attrs:
+                return False, f"Missing optional attribute: {attr}"
+
+        # Validation passed
+        return True, "Valid Google Maps iframe"
+
+    except Exception as e:
+        return False, f"Error during validation: {str(e)}"

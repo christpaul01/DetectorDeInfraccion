@@ -29,6 +29,14 @@
                         <li class="list-group-item"><strong>Detalles:</strong> {{ direccion.detalles }}</li>
                     </ul>
 
+
+                    {% if direccion.google_embeded_url %}
+                    <div class="card-body">
+                        {{ direccion.google_embeded_url|safe }}
+                    </div>
+                    {% endif %}
+
+
                     <div class="mt-3 text-center">
                         <div class="mt-4">
                         {% if direccion.google_maps_url %}

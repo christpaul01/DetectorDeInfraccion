@@ -549,10 +549,19 @@ def editarDireccion(request, id_direccion):
         pais = request.POST['pais']
         detalles = request.POST['detalles']
         google_maps_url = request.POST['googleMapsUrl']
+        google_embeded_url = request.POST['googleMapsEmbeddedUrl']
+        valid_google_iframe = utilidades.validate_google_maps_iframe(google_embeded_url)
+
+        if not valid_google_iframe:
+            error_type = "Error de procesamiento"
+            error_message = "El URL de Google Maps Embeded no es válido."
+            context = {"error_type": error_type, "error_message": error_message}
+            return render(request, 'error.html', context)
 
         (Direccion.objects.filter(id_direccion=id_direccion).update
          (nombre_direccion=nombre_direccion, municipio=municipio, ciudad=ciudad,
-          pais=pais, detalles=detalles, google_maps_url=google_maps_url))
+          pais=pais, detalles=detalles, google_maps_url=google_maps_url,
+          google_embeded_url=google_embeded_url))
         return redirect('/direcciones/')
 
 @login_required
@@ -584,10 +593,19 @@ def registrarDireccion(request):
     pais = request.POST['pais']
     detalles = request.POST['detalles']
     google_maps_url = request.POST['googleMapsUrl']
+    google_embeded_url = request.POST['googleMapsEmbeddedUrl']
+
+    valid_google_iframe = utilidades.validate_google_maps_iframe(google_embeded_url)
+
+    if not valid_google_iframe:
+        error_type = "Error de procesamiento"
+        error_message = "El URL de Google Maps Embeded no es válido."
+        context = {"error_type": error_type, "error_message": error_message}
+        return render(request, 'error.html', context)
 
     Direccion.objects.create(id_direccion=idDireccion, nombre_direccion=nombreDireccion,
                              municipio=municipio, ciudad=ciudad, pais=pais, detalles=detalles,
-                             google_maps_url=google_maps_url)
+                             google_maps_url=google_maps_url, google_embeded_url=google_embeded_url)
     return redirect('/direcciones/')
 
 
