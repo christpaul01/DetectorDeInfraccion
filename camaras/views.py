@@ -787,6 +787,8 @@ def listarInfracciones(request):
         return render(request, 'error.html', context)
 
     infracciones = Infraccion.objects.all()
+    # sort infracciones by estado infracciones pendiente then confirmada then denegada and by date
+    infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
     context = {"infracciones": infracciones}
 
     return render(request, 'listarInfracciones.html', context)
