@@ -814,7 +814,7 @@ def estadisticas(request):
     )
     camara_top = (
         Camara.objects.annotate(infracciones_totales=Count('infraccion'))
-        .order_by('-infracciones_totales')[:1]
+        .order_by('-infracciones_totales')[:5]
     )
 
     # 2. Preparar datos para renderizar en JSON/JavaScript
