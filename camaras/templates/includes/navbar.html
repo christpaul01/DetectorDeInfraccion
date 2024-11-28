@@ -38,9 +38,23 @@
         <li class="nav-item">
           <a class="nav-link" href="/direcciones/">Direcciones</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/infracciones">Infracciones</a>
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Infracciones
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="/infracciones/listar/pendientes">Pendientes</a></li>
+              <li><a class="dropdown-item" href="/infracciones/listar/revisadas">Revisadas</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/infracciones/listar/confirmadas">Confirmadas</a></li>
+              <li><a class="dropdown-item" href="/infracciones/listar/denegadas">Denegadas</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/infracciones/listar/todas">Todas</a></li>
+          </ul>
         </li>
+
+
         <li class="nav-item">
           <a class="nav-link" href="/estadisticas/">Estadísticas</a>
         </li>

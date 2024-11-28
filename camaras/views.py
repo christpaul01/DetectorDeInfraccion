@@ -779,18 +779,42 @@ def cambiarEstadoCuenta(request, id):
 
 # NOTE: Bloque Infracciones
 
-def listarInfracciones(request):
+def listarInfracciones(request, estado):
     if not request.user.groups.filter(name='Admin').exists():
         error_type = "Error de permisos"
         error_message = "No tienes permisos para ver la lista de infracciones."
         context = {"error_type": error_type, "error_message": error_message}
         return render(request, 'error.html', context)
 
-    infracciones = Infraccion.objects.all()
-    # sort infracciones by estado infracciones pendiente then confirmada then denegada and by date
-    infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
-    context = {"infracciones": infracciones}
+    if estado:
+        print("Estado: ", estado)
+        if estado == 'pendientes':
+            infracciones = Infraccion.objects.filter(estado_infraccion='Pendiente')
+            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
 
+        elif estado == 'confirmadas':
+            infracciones = Infraccion.objects.filter(estado_infraccion='Confirmada')
+            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
+
+        elif estado == 'denegadas':
+            infracciones = Infraccion.objects.filter(estado_infraccion='Denegada')
+            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
+
+        elif estado == 'revisadas':
+            infracciones = Infraccion.objects.exclude(estado_infraccion='Pendiente')
+            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
+        else:
+            infracciones = Infraccion.objects.all()
+            # sort infracciones by estado infracciones pendiente then confirmada then denegada and by date
+            infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
+
+    else:
+        print("Estado: Todos")
+        infracciones = Infraccion.objects.all()
+        # sort infracciones by estado infracciones pendiente then confirmada then denegada and by date
+        infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
+
+    context = {"infracciones": infracciones}
     return render(request, 'listarInfracciones.html', context)
 
 # NOTE: Ajustes del Sistema
