@@ -2,6 +2,7 @@ from datetime import datetime
 from threading import Thread
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
 from django.http import HttpResponse, StreamingHttpResponse
 from .forms import CustomUserCreationForm  # Import the custom form
 
@@ -242,16 +243,41 @@ def confirmarInfraccion(request, id_infraccion):
     infraccion.estado_infraccion = 'Confirmada'
     infraccion.revision_infraccion = f'Confirmada por usuario: {nombreUsuario}'
     infraccion.save()
-    return redirect(listarInfracciones)
+
+    # Find the next "Pendiente" infraction
+    next_infraccion = Infraccion.objects.filter(estado_infraccion='Pendiente').exclude(
+        id_infraccion=id_infraccion).order_by('fecha_infraccion').first()
+
+    if next_infraccion:
+        # Redirect to the details page of the next "Pendiente" infraction
+        return redirect('stream_infraccion', id_infraccion=next_infraccion.id_infraccion)
+    else:
+        # If no more "Pendiente" infractions, return to the list
+        return redirect(listarInfracciones, estado='Pendiente')
+
+
 
 @login_required
 def denegarInfraccion(request, id_infraccion):
     nombreUsuario = request.user.username
+
+    # Get the current infraction and mark it as 'Denegada'
     infraccion = Infraccion.objects.get(id_infraccion=id_infraccion)
     infraccion.estado_infraccion = 'Denegada'
     infraccion.revision_infraccion = f'Denegada por usuario: {nombreUsuario}'
     infraccion.save()
-    return redirect(listarInfracciones)
+
+    # Find the next "Pendiente" infraction
+    next_infraccion = Infraccion.objects.filter(estado_infraccion='Pendiente').exclude(
+        id_infraccion=id_infraccion).order_by('fecha_infraccion').first()
+
+    if next_infraccion:
+        # Redirect to the details page of the next "Pendiente" infraction
+        return redirect('stream_infraccion', id_infraccion=next_infraccion.id_infraccion)
+    else:
+        # If no more "Pendiente" infractions, return to the list
+        return redirect(listarInfracciones, estado='Pendiente')
+
 
 @login_required
 def eliminarInfraccion(request, id_infraccion, estadoInfraccion):
@@ -790,31 +816,30 @@ def listarInfracciones(request, estado):
     if estado:
         if estado == 'pendientes':
             infracciones = Infraccion.objects.filter(estado_infraccion='Pendiente')
-            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
-
         elif estado == 'confirmadas':
             infracciones = Infraccion.objects.filter(estado_infraccion='Confirmada')
-            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
-
         elif estado == 'denegadas':
             infracciones = Infraccion.objects.filter(estado_infraccion='Denegada')
-            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
-
         elif estado == 'revisadas':
             infracciones = Infraccion.objects.exclude(estado_infraccion='Pendiente')
-            infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
         else:
             infracciones = Infraccion.objects.all()
-            # sort infracciones by estado infracciones pendiente then confirmada then denegada and by date
-            infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
-
     else:
-        print("Estado: Todos")
         infracciones = Infraccion.objects.all()
-        # sort infracciones by estado infracciones pendiente then confirmada then denegada and by date
-        infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
 
-    context = {"infracciones": infracciones, "estadoInfraccion": estado}
+    # Sort infracciones by estado and date
+    infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
+
+    # Implement pagination (10 items per page)
+    paginator = Paginator(infracciones, 10)
+    page_number = request.GET.get('page')  # Get the page number from the query parameters
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "infracciones": page_obj.object_list,  # List of infracciones for the current page
+        "estadoInfraccion": estado,
+        "page_obj": page_obj  # Pass the page object to the template
+    }
     return render(request, 'listarInfracciones.html', context)
 
 # NOTE: Ajustes del Sistema

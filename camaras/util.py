@@ -281,6 +281,7 @@ def start_vehicle_detection(id_camara):
         if id_camara in stop_flags:
             stop_flags.pop(id_camara, None)
 
+
 def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
     try:
         # Load the video
@@ -313,8 +314,15 @@ def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
                 print(f"Error reading frame {current_frame}")
                 break
 
-            # Encode the frame to JPEG
-            ret, buffer = cv2.imencode('.jpg', frame)
+            # Resize frame to lower resolution
+            scale_percent = 50  # Adjust percentage as needed
+            width = int(frame.shape[1] * scale_percent / 100)
+            height = int(frame.shape[0] * scale_percent / 100)
+            dim = (width, height)
+            frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+
+            # Encode with lower quality
+            ret, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])  # Adjust quality as needed
             if not ret:
                 print(f"Error encoding frame {current_frame}")
                 continue
@@ -325,10 +333,13 @@ def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
+            # Skip frames for bandwidth reduction
+            frame_skip = 2  # Adjust as needed
+            current_frame += frame_skip
+            cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
+
             # Mimic video playback speed
             time.sleep(playback_speed)
-
-            current_frame += 1
 
     except Exception as e:
         print(f"Exception occurred in video_to_html: {e}")
@@ -336,6 +347,63 @@ def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
     finally:
         cap.release()
         cv2.destroyAllWindows()
+
+#
+# def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
+#     try:
+#         # Load the video
+#         cap = cv2.VideoCapture(video_path)
+#
+#         # Check if the video is opened successfully
+#         if not cap.isOpened():
+#             raise ValueError(f"Error opening video file: {video_path}")
+#
+#         # Get total number of frames and FPS in the video
+#         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+#         fps = cap.get(cv2.CAP_PROP_FPS)
+#
+#         # Ensure end_frame does not exceed the total number of frames
+#         end_frame = min(end_frame, total_frames - 1)
+#
+#         # Set the video to start from the start_frame
+#         cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+#
+#         # Default playback speed is based on the video's FPS
+#         if playback_speed is None:
+#             playback_speed = 1 / fps
+#
+#         current_frame = start_frame
+#
+#         while current_frame <= end_frame:
+#             ret, frame = cap.read()
+#
+#             if not ret:
+#                 print(f"Error reading frame {current_frame}")
+#                 break
+#
+#             # Encode the frame to JPEG
+#             ret, buffer = cv2.imencode('.jpg', frame)
+#             if not ret:
+#                 print(f"Error encoding frame {current_frame}")
+#                 continue
+#
+#             frame_bytes = buffer.tobytes()
+#
+#             # Yield the frame as part of an HTTP response, simulating streaming
+#             yield (b'--frame\r\n'
+#                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+#
+#             # Mimic video playback speed
+#             time.sleep(playback_speed)
+#
+#             current_frame += 1
+#
+#     except Exception as e:
+#         print(f"Exception occurred in video_to_html: {e}")
+#
+#     finally:
+#         cap.release()
+#         cv2.destroyAllWindows()
 
 
 def watch_video_from_frame(video_path, start_frame, end_frame):

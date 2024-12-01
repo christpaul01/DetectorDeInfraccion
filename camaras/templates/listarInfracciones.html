@@ -6,7 +6,7 @@
 
 {% block body %}
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Listado de Infracciones | {{ estadoInfraccion | capfirst}}</h1>
+    <h1 class="text-center mb-4">Listado de Infracciones | {{ estadoInfraccion | capfirst }}</h1>
     <div class="card">
         <div class="card-body">
             <table class="table table-bordered table-striped">
@@ -24,8 +24,8 @@
                     {% for infraccion in infracciones %}
                     <tr>
                         <td>{{ infraccion.id_infraccion }}</td>
-                        <td>{{ infraccion.id_tipo_vehiculo.nombre_tipo_vehiculo }}</td>  <!-- Asumiendo que `nombre_tipo_vehiculo` es el campo del modelo `TipoVehiculo` -->
-                        <td>{{ infraccion.id_camara.nombre_camara }}</td>  <!-- Asumiendo que `nombre_camara` es el campo del modelo `Camara` -->
+                        <td>{{ infraccion.id_tipo_vehiculo.nombre_tipo_vehiculo }}</td>
+                        <td>{{ infraccion.id_camara.nombre_camara }}</td>
                         <td>{{ infraccion.fecha_infraccion }}</td>
                         <td>{{ infraccion.estado_infraccion }}</td>
                         <td>
@@ -37,6 +37,39 @@
                     {% endfor %}
                 </tbody>
             </table>
+
+            <!-- Pagination controls -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Siguiente</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
