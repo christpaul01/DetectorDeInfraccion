@@ -6,7 +6,7 @@
 
 {% block body %}
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Listado de Infracciones</h1>
+    <h1 class="text-center mb-4">Listado de Infracciones | {{ estadoInfraccion | capfirst}}</h1>
     <div class="card">
         <div class="card-body">
             <table class="table table-bordered table-striped">
@@ -29,9 +29,9 @@
                         <td>{{ infraccion.fecha_infraccion }}</td>
                         <td>{{ infraccion.estado_infraccion }}</td>
                         <td>
-                            <a href="detallesInfracciones/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-primary">Detalles</a>
+                            <a href="/infracciones/detallesInfracciones/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-primary">Detalles</a>
                             <a href="/streamInfracciones/{{ infraccion.id_infraccion }}" class="btn btn-sm btn-warning">Revisar</a>
-                            <a href="{% url 'eliminarInfraccion' infraccion.id_infraccion %}" class="btn btn-sm btn-danger">Borrar</a>
+                            <a href="/infracciones/eliminarInfraccion/{{ infraccion.id_infraccion }}/{{ estadoInfraccion }}" class="btn btn-sm btn-danger">Borrar</a>
                         </td>
                     </tr>
                     {% endfor %}

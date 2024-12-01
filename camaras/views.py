@@ -254,8 +254,9 @@ def denegarInfraccion(request, id_infraccion):
     return redirect(listarInfracciones)
 
 @login_required
-def eliminarInfraccion(request, id_infraccion):
+def eliminarInfraccion(request, id_infraccion, estadoInfraccion):
     isAdmin = request.user.groups.filter(name='Admin').exists()
+    print("estadoInfraccion: ", estadoInfraccion)
     if not isAdmin:
         error_type = "Error de permisos"
         error_message = "No tienes permisos para borrar infracciones."
@@ -264,7 +265,7 @@ def eliminarInfraccion(request, id_infraccion):
 
     infraccion = Infraccion.objects.get(id_infraccion=id_infraccion)
     infraccion.delete()
-    return redirect(listarInfracciones)
+    return redirect(listarInfracciones, estado= estadoInfraccion)
 
 @login_required
 def stream_video_content(request, id_camara):
@@ -787,7 +788,6 @@ def listarInfracciones(request, estado):
         return render(request, 'error.html', context)
 
     if estado:
-        print("Estado: ", estado)
         if estado == 'pendientes':
             infracciones = Infraccion.objects.filter(estado_infraccion='Pendiente')
             infracciones = sorted(infracciones, key=lambda x: x.fecha_infraccion, reverse=True)
@@ -814,7 +814,7 @@ def listarInfracciones(request, estado):
         # sort infracciones by estado infracciones pendiente then confirmada then denegada and by date
         infracciones = sorted(infracciones, key=lambda x: (x.estado_infraccion, x.fecha_infraccion), reverse=True)
 
-    context = {"infracciones": infracciones}
+    context = {"infracciones": infracciones, "estadoInfraccion": estado}
     return render(request, 'listarInfracciones.html', context)
 
 # NOTE: Ajustes del Sistema

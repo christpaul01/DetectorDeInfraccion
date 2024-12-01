@@ -47,7 +47,7 @@ urlpatterns = [
     path('infracciones/detallesInfracciones/<int:id_infraccion>', views.detallesInfraccion, name='detallesInfracciones'),
     path('confirmarInfraccion/<int:id_infraccion>/', views.confirmarInfraccion, name='confirmarInfraccion'),
     path('denegarInfraccion/<int:id_infraccion>/', views.denegarInfraccion, name='denegarInfraccion'),
-    path('infracciones/eliminarInfraccion/<int:id_infraccion>', views.eliminarInfraccion, name='eliminarInfraccion'),
+    path('infracciones/eliminarInfraccion/<int:id_infraccion>/<estadoInfraccion>', views.eliminarInfraccion, name='eliminarInfraccion'),
 
 
 
