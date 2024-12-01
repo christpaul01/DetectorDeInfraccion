@@ -569,7 +569,7 @@ def get_roi_vertices(frame, window_name="Select ROI"):
     roi_vertices = []
     max_vertices = 4
     global num_pressed
-    max_angle = 50
+    max_angle = 65
     num_pressed = 0
     roi_selected = False
 
