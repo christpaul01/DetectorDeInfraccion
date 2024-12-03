@@ -77,7 +77,6 @@ def start_vehicle_detection(id_camara):
             vehicles = [2,3,5,7]
 
         # Obtener el umbral de detección de vehículos desde la base de datos
-        threshold_vehicle = camara.threshold_vehicle
         threshold_vehicle = (camara.threshold_vehicle
                              or Umbral.objects.filter(nombre_umbral='Threshold_Vehicle').first().valor_umbral
                              or 0.55)
