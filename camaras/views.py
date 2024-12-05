@@ -189,11 +189,13 @@ def stream_video(request, id_camara):
 def stream_infraccion(request, id_infraccion):
     # Attempt to get the infraccion object
     infraccion = get_object_or_404(Infraccion, id_infraccion=id_infraccion)
+    tipoInfraccion = TipoInfraccion.objects.get(id_tipo_infraccion=infraccion.tipo_infraccion_id).nombre_tipo_infraccion
 
     # Prepare context for the template
     context = {
         'infraccion': infraccion,
-        'video_url': f"/streamInfracciones/{infraccion.id_infraccion}/video/"
+        'video_url': f"/streamInfracciones/{infraccion.id_infraccion}/video/",
+        'tipoInfraccion': tipoInfraccion
     }
 
     return render(request, 'streamInfraccion.html', context)

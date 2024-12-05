@@ -15,7 +15,7 @@
     <!-- Image of the infracción, if it exists -->
     {% if infraccion.vehicle_image_base64 %}
         <br>
-        <h4 class="text-center mb-4">Vehiculo de la Infracción #{{ infraccion.id_infraccion }}</h4>
+        <h4 class="text-center mb-4">Vehiculo de la Infracción #{{ infraccion.id_infraccion }} | {{ tipoInfraccion }}</h4>
         <div class="text-center ml-4">
             <img src="data:image/png;base64,{{ infraccion.vehicle_image_base64 }}"
                  alt="Imagen de la Infracción" class="img-fluid" style="max-width: 100%; height: auto;">
