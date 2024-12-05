@@ -148,6 +148,8 @@ def start_vehicle_detection(id_camara):
             frame_num += 1
             processing_start_time = time.time()
 
+            annotated_frame = frame.copy()
+
             results = model.track(frame, persist=True, classes=vehicles, tracker="bytetrack.yaml")
 
             if results[0].boxes.id is not None:
@@ -253,15 +255,15 @@ def start_vehicle_detection(id_camara):
                 print("Output/Input fps ratio: {:.2f}x".format(frame_rate_ratio))
                 print(f"Elapsed time: {elapsed_time_frame} seconds for frame #{frame_num}")
 
-                # TODO: Borrar esta parte del codigo en produccion
-                # Show the frame with the detected objects
-                #cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
-                out.write(annotated_frame)
+            # TODO: Borrar esta parte del codigo en produccion
+            # Show the frame with the detected objects
+            #cv2.imshow(f"YOLOv8 Tracking for {nombre}", annotated_frame)
+            out.write(annotated_frame)
 
 
-                # TODO: Borrar esta parte del codigo en produccion
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
+            # TODO: Borrar esta parte del codigo en produccion
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
         cap.release()
         cv2.destroyAllWindows()
@@ -283,62 +285,52 @@ def start_vehicle_detection(id_camara):
 
 def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
     try:
-        # Load the video
         cap = cv2.VideoCapture(video_path)
-
-        # Check if the video is opened successfully
         if not cap.isOpened():
             raise ValueError(f"Error opening video file: {video_path}")
 
-        # Get total number of frames and FPS in the video
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         fps = cap.get(cv2.CAP_PROP_FPS)
-
-        # Ensure end_frame does not exceed the total number of frames
         end_frame = min(end_frame, total_frames - 1)
-
-        # Set the video to start from the start_frame
         cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
 
-        # Default playback speed is based on the video's FPS
+        frame_skip = 5  # Saltar cada x frames
+        effective_fps = fps / frame_skip
         if playback_speed is None:
-            playback_speed = 1 / fps
+            playback_speed = 1 / effective_fps
 
         current_frame = start_frame
 
         while current_frame <= end_frame:
+            start_time = time.time()
             ret, frame = cap.read()
-
             if not ret:
                 print(f"Error reading frame {current_frame}")
                 break
 
-            # Resize frame to lower resolution
-            scale_percent = 50  # Adjust percentage as needed
-            width = int(frame.shape[1] * scale_percent / 100)
-            height = int(frame.shape[0] * scale_percent / 100)
-            dim = (width, height)
+            # Resize frame
+            scale_percent = 50  # Resize to 25%
+            dim = (int(frame.shape[1] * scale_percent / 100), int(frame.shape[0] * scale_percent / 100))
             frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
 
-            # Encode with lower quality
-            ret, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])  # Adjust quality as needed
+            # Encode frame
+            ret, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 30])  # Quality at 30%
             if not ret:
                 print(f"Error encoding frame {current_frame}")
                 continue
 
             frame_bytes = buffer.tobytes()
 
-            # Yield the frame as part of an HTTP response, simulating streaming
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-            # Skip frames for bandwidth reduction
-            frame_skip = 2  # Adjust as needed
+            # Skip frames and update position
             current_frame += frame_skip
             cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
 
-            # Mimic video playback speed
-            time.sleep(playback_speed)
+            # Adjust sleep time for consistent playback
+            elapsed_time = time.time() - start_time
+            time.sleep(max(0, playback_speed - elapsed_time))
 
     except Exception as e:
         print(f"Exception occurred in video_to_html: {e}")
@@ -346,6 +338,7 @@ def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
     finally:
         cap.release()
         cv2.destroyAllWindows()
+
 
 #
 # def video_to_html(video_path, start_frame, end_frame, playback_speed=None):
@@ -696,6 +689,7 @@ def get_roi_vertices(frame, window_name="Select ROI"):
     cv2.destroyAllWindows()
 
     if roi_selected:
+        cv2.destroyAllWindows()
         return roi_vertices
 
     # # Esperar a que el usuario seleccione los vértices del ROI
